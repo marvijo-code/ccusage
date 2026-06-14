@@ -1,6 +1,22 @@
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { defineConfig } from 'bumpp';
+
+/**
+ * Minimal local mirror of the bumpp config types.
+ *
+ * `bumpp` is provided by the Nix dev shell (see `nix/bumpp/`) rather than as a
+ * pnpm dependency, so it cannot be imported here. We only model the surface of
+ * the bumpp operation that this config touches.
+ */
+type BumppOperation = {
+	options: { cwd: string };
+	state: { newVersion: string; updatedFiles: string[] };
+	update: (changes: { updatedFiles: string[] }) => void;
+};
+
+type BumppConfig = {
+	execute: (operation: BumppOperation) => void | Promise<void>;
+};
 
 const RUST_RELEASE_FILE_PATTERN = /^rust\/(?:Cargo\.lock|crates\/[^/]+\/Cargo\.toml)$/;
 const GIT_STATUS_FILE_PATTERN = /^.. (?<filePath>.+)$/;
@@ -25,7 +41,7 @@ function getUpdatedRustReleaseFiles(cwd: string): string[] {
 		);
 }
 
-export default defineConfig({
+const config: BumppConfig = {
 	async execute(operation) {
 		const result = spawnSync(
 			'cargo',
@@ -58,4 +74,6 @@ export default defineConfig({
 			],
 		});
 	},
-});
+};
+
+export default config;
