@@ -1,107 +1,38 @@
 {
-  fetchPnpmDeps,
+  buildNpmPackage,
   lib,
   makeWrapper,
   nodejs,
-  pnpmConfigHook,
-  pnpm_11,
   runCommand,
-  stdenvNoCC,
 }:
-let
-  pnpm = pnpm_11.override { inherit nodejs; };
-  src = runCommand "publint-pnpm-src" { } ''
-    mkdir -p "$out"
-    cat > "$out/package.json" <<'EOF'
-    {"name":"publint-nix","version":"0.0.0","private":true,"devDependencies":{"publint":"0.3.12"}}
-    EOF
-    cat > "$out/pnpm-lock.yaml" <<'EOF'
-    lockfileVersion: '9.0'
-
-    settings:
-      autoInstallPeers: true
-      excludeLinksFromLockfile: false
-
-    importers:
-
-      .:
-        devDependencies:
-          publint:
-            specifier: 0.3.12
-            version: 0.3.12
-
-    packages:
-
-      '@publint/pack@0.1.4':
-        resolution: {integrity: sha512-HDVTWq3H0uTXiU0eeSQntcVUTPP3GamzeXI41+x7uU9J65JgWQh3qWZHblR1i0npXfFtF+mxBiU2nJH8znxWnQ==}
-        engines: {node: '>=18'}
-
-      mri@1.2.0:
-        resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
-        engines: {node: '>=4'}
-
-      package-manager-detector@1.6.0:
-        resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
-
-      picocolors@1.1.1:
-        resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
-
-      publint@0.3.12:
-        resolution: {integrity: sha512-1w3MMtL9iotBjm1mmXtG3Nk06wnq9UhGNRpQ2j6n1Zq7YAD6gnxMMZMIxlRPAydVjVbjSm+n0lhwqsD1m4LD5w==}
-        engines: {node: '>=18'}
-        hasBin: true
-
-      sade@1.8.1:
-        resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
-        engines: {node: '>=6'}
-
-    snapshots:
-
-      '@publint/pack@0.1.4': {}
-
-      mri@1.2.0: {}
-
-      package-manager-detector@1.6.0: {}
-
-      picocolors@1.1.1: {}
-
-      publint@0.3.12:
-        dependencies:
-          '@publint/pack': 0.1.4
-          package-manager-detector: 1.6.0
-          picocolors: 1.1.1
-          sade: 1.8.1
-
-      sade@1.8.1:
-        dependencies:
-          mri: 1.2.0
-    EOF
-  '';
-in
-stdenvNoCC.mkDerivation (finalAttrs: {
+buildNpmPackage (finalAttrs: {
   pname = "publint";
   version = "0.3.12";
-  inherit src;
 
-  nativeBuildInputs = [
-    makeWrapper
-    nodejs
-    pnpm
-    pnpmConfigHook
-  ];
+  # `publint` is consumed only as a standalone CLI (dev shell + flake checks),
+  # so we install it through a thin wrapper package that depends on the pinned
+  # release rather than adding it to our own pnpm workspace. `version` is the
+  # single source of truth: it feeds the wrapper's `dependencies` entry below
+  # and the committed `publint-package-lock.json` captures the exact runtime
+  # closure. Bump both at once with `just update-publint [<version>]`, which
+  # regenerates the lockfile and refreshes `npmDepsHash` via `nix-update`.
+  src = runCommand "publint-npm-src" { } ''
+    mkdir -p "$out"
+    cat > "$out/package.json" <<EOF
+    {"name":"publint-nix","version":"0.0.0","private":true,"dependencies":{"publint":"${finalAttrs.version}"}}
+    EOF
+    cp ${./publint-package-lock.json} "$out/package-lock.json"
+  '';
 
-  pnpmDeps = fetchPnpmDeps {
-    inherit (finalAttrs)
-      pname
-      version
-      src
-      ;
-    inherit pnpm;
-    fetcherVersion = 3;
-    hash = "sha256-TSLDCjiXj131uLlLNegm6M4cFEgJtjmhNtHDtoHKm6E=";
-  };
+  npmDepsHash = "sha256-ePXOE6HgUiLJ5FN7DBbULGhypS+U/1phCkp6VTrFSnE=";
 
-  dontBuild = true;
+  # The wrapper has nothing to compile; npm only needs to materialize
+  # node_modules from the lockfile, and publint ships no install scripts.
+  dontNpmBuild = true;
+  npmFlags = [ "--ignore-scripts" ];
+  makeCacheWritable = true;
+
+  nativeBuildInputs = [ makeWrapper ];
 
   installPhase = ''
     runHook preInstall
