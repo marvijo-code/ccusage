@@ -34,6 +34,14 @@ def main [] {
             msg: $"($built_binary) depends on dynamic libraries that do not exist on end-user machines; rebuild it \(Linux packages must be static, macOS packages may only link system dylibs)"
         }
     }
+    if $native_package_root == null {
+        error make {
+            msg: $"No native package directory matches ($target_platform)-($target_arch)"
+        }
+    }
+    mkdir ($native_package_root | path join bin)
+    cp -f $built_binary $native_binary
+    chmod 755 $native_binary
 }
 def node_platform [] { match $nu.os-info.name {
     'macos' => 'darwin'
