@@ -8,7 +8,6 @@
   coreutils,
   curl,
   fetchPnpmDeps,
-  gnugrep,
   gnused,
   jq,
   lib,
@@ -55,7 +54,6 @@ let
       cacert
       coreutils
       curl
-      gnugrep
       gnused
       jq
       nix
