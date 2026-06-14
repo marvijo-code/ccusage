@@ -14,9 +14,20 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Checkout (for local actions)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+      - name: Set up git bot identity
+        id: bot
+        uses: ./.github/actions/setup-git-bot
+        with:
+          app-id: ${{ secrets.CCUSAGE_UPDATER_APP_ID }}
+          private-key: ${{ secrets.CCUSAGE_UPDATER_APP_PRIVATE_KEY }}
+      - name: Checkout (with bot token)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          token: ${{ steps.bot.outputs.token }}
       - uses: ./.github/actions/setup-nix-cache
       - name: Capture current LiteLLM pricing JSON
         run: |
@@ -47,16 +58,12 @@ jobs:
           nix develop --command just check
       - name: Create pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
         run: |
           if git diff --quiet; then
             echo "Pricing snapshot is already up to date."
             exit 0
           fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          gh auth setup-git
 
           branch="automation/litellm-pricing"
           git checkout -B "$branch"
@@ -76,6 +83,8 @@ jobs:
             printf '%s\n' "$body" | gh pr create --base main --head "$branch" --title "chore(pricing): update LiteLLM snapshot" --body-file -
           fi
 
+          gh pr merge "$branch" --auto --squash || echo "::warning::Auto-merge not enabled; configure required status checks on main."
+
   update-models-dev-pricing:
     needs: update-pricing
     if: ${{ always() }}
@@ -84,9 +93,20 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Checkout (for local actions)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+      - name: Set up git bot identity
+        id: bot
+        uses: ./.github/actions/setup-git-bot
+        with:
+          app-id: ${{ secrets.CCUSAGE_UPDATER_APP_ID }}
+          private-key: ${{ secrets.CCUSAGE_UPDATER_APP_PRIVATE_KEY }}
+      - name: Checkout (with bot token)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          token: ${{ steps.bot.outputs.token }}
       - uses: ./.github/actions/setup-nix-cache
       - name: Update models.dev input
         run: |
@@ -111,16 +131,12 @@ jobs:
           nix develop --command just check
       - name: Create pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
         run: |
           if git diff --quiet; then
             echo "Pricing snapshot is already up to date."
             exit 0
           fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          gh auth setup-git
 
           branch="automation/models-dev-pricing"
           git checkout -B "$branch"
@@ -140,6 +156,8 @@ jobs:
             printf '%s\n' "$body" | gh pr create --base main --head "$branch" --title "chore(pricing): update models.dev snapshot" --body-file -
           fi
 
+          gh pr merge "$branch" --auto --squash || echo "::warning::Auto-merge not enabled; configure required status checks on main."
+
   update-publint:
     needs: update-models-dev-pricing
     if: ${{ always() }}
@@ -148,9 +166,20 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Checkout (for local actions)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
+      - name: Set up git bot identity
+        id: bot
+        uses: ./.github/actions/setup-git-bot
+        with:
+          app-id: ${{ secrets.CCUSAGE_UPDATER_APP_ID }}
+          private-key: ${{ secrets.CCUSAGE_UPDATER_APP_PRIVATE_KEY }}
+      - name: Checkout (with bot token)
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          token: ${{ steps.bot.outputs.token }}
       - uses: ./.github/actions/setup-nix-cache
       - name: Update pinned publint CLI
         run: |
@@ -172,16 +201,12 @@ jobs:
           nix develop --command just check
       - name: Create pull request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.bot.outputs.token }}
         run: |
           if git diff --quiet; then
             echo "publint is already up to date."
             exit 0
           fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          gh auth setup-git
 
           branch="automation/publint"
           git checkout -B "$branch"
@@ -201,3 +226,5 @@ jobs:
           else
             printf '%s\n' "$body" | gh pr create --base main --head "$branch" --title "chore(deps): update publint to ${version}" --body-file -
           fi
+
+          gh pr merge "$branch" --auto --squash || echo "::warning::Auto-merge not enabled; configure required status checks on main."
