@@ -55,6 +55,22 @@ update-litellm-pricing:
     nix flake update litellm
     just check
 
+# Update the pinned publint CLI (default: latest on npm): regenerate the
+# committed lockfile, then bump version + npmDepsHash via nix-update
+update-publint version="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    target='{{version}}'
+    if [ -z "$target" ]; then target="$(npm view publint version)"; fi
+    echo "Updating pinned publint -> $target"
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    printf '{"name":"publint-nix","version":"0.0.0","private":true,"dependencies":{"publint":"%s"}}\n' "$target" > "$tmp/package.json"
+    (cd "$tmp" && npm install --package-lock-only --ignore-scripts >/dev/null)
+    cp "$tmp/package-lock.json" nix/publint-package-lock.json
+    nix-update --flake publint --version "$target"
+    nix fmt nix/publint.nix
+
 # Regenerate committed models.dev snapshots from the pinned input
 gen-models-dev-pricing:
     snapshots="$(nix build .#models-dev-pricing --no-link --print-out-paths)" && cp "$snapshots/models-dev-pricing.json" rust/crates/ccusage/src/models-dev-pricing.json && cp "$snapshots/codex-auto-review-fallbacks.json" rust/crates/ccusage/src/adapter/codex/codex-auto-review-fallbacks.json

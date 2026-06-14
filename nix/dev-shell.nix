@@ -42,6 +42,7 @@ in
             zizmor
             oxlint
             just
+            nix-update
             prek
             gitleaks
             renovate
