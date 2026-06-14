@@ -14,7 +14,6 @@ def main [] {
     } else {
         $native_package_root | path join bin $binary_name
     }
-    let cargo_binary = ($repo_root | path join rust target release $binary_name)
     let version = (expected_version $repo_root)
     if ((native_package_includes_binary $native_package_root $binary_name) and (has_expected_version $native_binary $version)) {
         if not (is_portable_binary $target_platform $native_binary) {
@@ -24,10 +23,19 @@ def main [] {
         }
         exit 0
     }
-    ^cargo build --manifest-path ($repo_root | path join rust Cargo.toml) --release --bin ccusage
-    if not (has_expected_version $cargo_binary $version) {
+    let built_binary = if ($target_platform == 'linux') or ($target_platform == 'darwin') {
+        build_nix_binary $repo_root $target_platform $target_arch $binary_name
+    } else {
+        build_cargo_binary $repo_root $binary_name
+    }
+    if not (has_expected_version $built_binary $version) {
         error make {
-            msg: $"($cargo_binary) did not report version ($version) after cargo build"
+            msg: $"($built_binary) did not report version ($version) after native build"
+        }
+    }
+    if not (is_portable_binary $target_platform $built_binary) {
+        error make {
+            msg: $"($built_binary) depends on dynamic libraries that do not exist on end-user machines; rebuild it \(Linux packages must be static, macOS packages may only link system dylibs)"
         }
     }
 }
@@ -56,6 +64,50 @@ def matching_native_package_root [repo_root: path, target_platform: string, targ
     $candidates | get --optional 0
 }
 def list_contains [value, needle: string] { (($value | describe) =~ '^list') and ($value | any {|item| $item == $needle }) }
+def nix_build_attr [target_platform: string, target_arch: string] {
+    if $target_platform == 'linux' {
+        'ccusage-static'
+    } else if $target_platform == 'darwin' and $target_arch == 'x64' {
+        'ccusage-darwin-x64'
+    } else if $target_platform == 'darwin' and $target_arch == 'arm64' {
+        'ccusage'
+    } else {
+        null
+    }
+}
+def build_nix_binary [
+    repo_root: path
+    target_platform: string
+    target_arch: string
+    binary_name: string
+] {
+    let attr = (nix_build_attr $target_platform $target_arch)
+    if $attr == null {
+        error make {
+            msg: $"No Nix package is configured for ($target_platform)-($target_arch)"
+        }
+    }
+    let flake_ref = $"($repo_root)#($attr)"
+    let result = (run-external nix build $flake_ref '--no-link' '--print-out-paths' '--print-build-logs' | complete)
+    if $result.exit_code != 0 {
+        error make {
+            msg: $"nix build ($flake_ref) failed\n($result.stderr)"
+        }
+    }
+    let out_path = (
+        $result.stdout | lines | where {|line| $line | is-not-empty } | last
+    )
+    if $out_path == null {
+        error make {
+            msg: $"nix build ($flake_ref) did not print an output path"
+        }
+    }
+    $out_path | path join bin $binary_name
+}
+def build_cargo_binary [repo_root: path, binary_name: string] {
+    ^cargo build --manifest-path ($repo_root | path join rust Cargo.toml) --release --bin ccusage
+    $repo_root | path join rust target release $binary_name
+}
 def expected_version [repo_root: path] {
     let package_json = (open ($repo_root | path join apps ccusage package.json))
     if (($package_json.version? | describe) != 'string') {

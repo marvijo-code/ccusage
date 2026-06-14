@@ -8,8 +8,8 @@
 #   * `ccusage-static` (this file) cross-compiles to musl and links fully
 #     statically, producing the portable binary that `release.yaml` ships to
 #     npm. The release matrix runs `nix build .#ccusage-static` for Linux;
-#     macOS arm64 uses the native Nix build, while macOS x64 and Windows fall
-#     back to `cargo build` because Nix cannot target those runners.
+#     macOS arm64 uses the native Nix build, macOS x64 uses
+#     `.#ccusage-darwin-x64`, and Windows falls back to `cargo build`.
 #
 # So Linux release artifacts must come from `.#ccusage-static`, never the
 # default `.#ccusage`, which would embed unusable `/nix/store` paths.

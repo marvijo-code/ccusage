@@ -26,13 +26,17 @@ build: ccusage::build docs::build
 typecheck:
     oxlint .
 
-# Run the full test suite (Rust workspace + Node test) in parallel
+# Run the full test suite (Rust workspace + Node and script tests) in parallel
 [parallel]
-test: rust::test test-node
+test: rust::test test-node test-nu-scripts
 
 # Run Node's built-in test runner for TypeScript package and tooling tests
 test-node:
     TZ=UTC node --test apps/ccusage/src/cli.test.ts nix/models-dev-compact.test.ts
+
+# Run focused tests for Nushell package scripts
+test-nu-scripts:
+    cd apps/ccusage/scripts && nu ensure-native-binary.test.nu
 
 # Generate a large benchmark fixture for PR performance comparisons
 generate-large-fixture output_dir codex_output_dir size_mib="1024":
