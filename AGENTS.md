@@ -20,6 +20,8 @@ Use these skills before working in this repository:
 - `tdd` - Red-Green-Refactor workflow for logic changes.
 - `reduce-similarities` - AST-based duplicate Rust code detection with similarity-rs; TypeScript duplication checks use `typescript` and `ast-grep`.
 - `cmux-debug` - terminal UI and responsive table verification in cmux.
+- `context7-mcp` - package and framework documentation lookup through Context7 with `mcporter`.
+- `grep-mcp` - real-world public GitHub code searches through grep.app with `mcporter`.
 - `create-pr` - single entry point for PR work, from branch creation through AI review requests, review-thread replies, and passing CI.
 - `fix-ci` - diagnose and fix failing GitHub Actions checks with `gh`, then push small follow-up commits.
 

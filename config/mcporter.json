@@ -1,0 +1,11 @@
+{
+	"mcpServers": {
+		"context7": {
+			"baseUrl": "https://mcp.context7.com/mcp"
+		},
+		"grep": {
+			"baseUrl": "https://mcp.grep.app"
+		}
+	},
+	"imports": []
+}
