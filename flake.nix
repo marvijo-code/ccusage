@@ -17,7 +17,10 @@
       url = "github:BerriAI/litellm";
       flake = false;
     };
-    llm-agents.url = "github:numtide/llm-agents.nix";
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     models-dev = {
       url = "github:anomalyco/models.dev";
       flake = false;
