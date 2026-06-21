@@ -3,6 +3,9 @@
 		"context7": {
 			"baseUrl": "https://mcp.context7.com/mcp"
 		},
+		"deepwiki": {
+			"baseUrl": "https://mcp.deepwiki.com/mcp"
+		},
 		"grep": {
 			"baseUrl": "https://mcp.grep.app"
 		}
