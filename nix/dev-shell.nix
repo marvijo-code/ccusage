@@ -63,6 +63,7 @@ in
           ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
             pkgs.apple-sdk_15
           ]
+          ++ [ inputs.llm-agents.packages.${system}.mcporter ]
           ++ config.pre-commit.settings.enabledPackages;
 
         shellHook = ''
