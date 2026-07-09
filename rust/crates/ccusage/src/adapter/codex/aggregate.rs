@@ -336,8 +336,11 @@ fn accumulate_codex_event_into_group(
     model_usage.reasoning_output_tokens += event.reasoning_output_tokens;
     model_usage.total_tokens += event.total_tokens;
     // Each event is one request, so its input size decides the pricing tier
-    // here; the summed totals cannot recover per-request context sizes.
-    if event.input_tokens > crate::pricing::OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS {
+    // here; the summed totals cannot recover per-request context sizes. The
+    // boundary is per model (OpenAI's 272K models and any future tier with a
+    // different threshold) rather than a single global constant, matching the
+    // threshold used to price the long-context buckets.
+    if event.input_tokens > crate::pricing::long_context_split_threshold(model) {
         model_usage.long_context_input_tokens += event.input_tokens;
         model_usage.long_context_cached_input_tokens += event.cached_input_tokens;
         model_usage.long_context_output_tokens += event.output_tokens;

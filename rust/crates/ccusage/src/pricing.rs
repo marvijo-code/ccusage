@@ -1345,6 +1345,19 @@ fn builtin_long_context_rates(base_model: &str) -> Option<LongContextRates> {
     }
 }
 
+/// Input-token boundary above which a request is billed at a model's
+/// long-context tier. Codex aggregates per-model token sums before pricing is
+/// applied, so each request's tier must be decided during aggregation from the
+/// model's own threshold rather than a single global constant. This returns the
+/// same value `apply_builtin_long_context_rates` stamps onto
+/// `Pricing::long_context_threshold`, and falls back to the default 200K
+/// boundary used for LiteLLM `*_above_200k_tokens` data.
+pub(crate) fn long_context_split_threshold(model: &str) -> u64 {
+    builtin_long_context_rates(model_without_date_suffix(model))
+        .map(|rates| rates.threshold)
+        .unwrap_or(DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS)
+}
+
 /// Strips a trailing release-date suffix (`-YYYY-MM-DD` or `-YYYYMMDD`) so
 /// date-pinned pricing keys share their base model's long-context rates.
 fn model_without_date_suffix(model: &str) -> &str {
@@ -1474,7 +1487,7 @@ fn fetch_json_url(url: &str) -> std::io::Result<String> {
 mod tests {
     use super::{
         BUILD_TIME_MODELS_DEV_JSON, BUILD_TIME_PRICING_JSON, Pricing, PricingMap,
-        embedded_models_dev_pricing, model_without_date_suffix,
+        embedded_models_dev_pricing, long_context_split_threshold, model_without_date_suffix,
     };
     use ccusage_test_support::fs_fixture;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -2122,6 +2135,20 @@ mod tests {
         let gpt_55 = pricing.find("gpt-5.5").unwrap();
         assert_eq!(gpt_55.input_above_200k, Some(12e-6));
         assert_eq!(gpt_55.long_context_threshold, None);
+    }
+
+    #[test]
+    fn long_context_split_threshold_is_per_model() {
+        // OpenAI two-stage models switch tiers above 272K input tokens.
+        assert_eq!(long_context_split_threshold("gpt-5.6-sol"), 272_000);
+        assert_eq!(long_context_split_threshold("gpt-5.5"), 272_000);
+        assert_eq!(long_context_split_threshold("gpt-5.5-pro"), 272_000);
+        // Date-pinned keys share their base model's boundary.
+        assert_eq!(long_context_split_threshold("gpt-5.5-2026-04-23"), 272_000);
+        // Models without a built-in tier fall back to the 200K default used for
+        // LiteLLM `*_above_200k_tokens` data.
+        assert_eq!(long_context_split_threshold("gpt-5"), 200_000);
+        assert_eq!(long_context_split_threshold("gpt-5.4-mini"), 200_000);
     }
 
     #[test]
