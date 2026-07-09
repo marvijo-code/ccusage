@@ -177,6 +177,65 @@ mod tests {
         pricing
     }
 
+    fn openai_long_context_pricing() -> PricingMap {
+        let mut pricing = PricingMap::default();
+        pricing.load_json(
+            r#"{
+                "gpt-long": {
+                    "input_cost_per_token": 1.0,
+                    "output_cost_per_token": 10.0,
+                    "cache_read_input_token_cost": 0.1,
+                    "input_cost_per_token_above_272k_tokens": 2.0,
+                    "output_cost_per_token_above_272k_tokens": 15.0,
+                    "cache_read_input_token_cost_above_272k_tokens": 0.2
+                }
+            }"#,
+        );
+        pricing
+    }
+
+    #[test]
+    fn prices_entire_openai_request_at_long_context_rates() {
+        let usage = TokenUsageRaw {
+            input_tokens: 250_000,
+            output_tokens: 1_000,
+            cache_read_input_tokens: 30_000,
+            ..TokenUsageRaw::default()
+        };
+
+        let cost = calculate_cost_for_usage(
+            Some("gpt-long"),
+            usage,
+            None,
+            CostMode::Calculate,
+            Some(&openai_long_context_pricing()),
+        );
+
+        let expected = 250_000.0 * 2.0 + 30_000.0 * 0.2 + 1_000.0 * 15.0;
+        assert!((cost - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn keeps_openai_request_at_short_rates_at_272k_input_tokens() {
+        let usage = TokenUsageRaw {
+            input_tokens: 242_000,
+            output_tokens: 1_000,
+            cache_read_input_tokens: 30_000,
+            ..TokenUsageRaw::default()
+        };
+
+        let cost = calculate_cost_for_usage(
+            Some("gpt-long"),
+            usage,
+            None,
+            CostMode::Calculate,
+            Some(&openai_long_context_pricing()),
+        );
+
+        let expected = 242_000.0 + 30_000.0 * 0.1 + 1_000.0 * 10.0;
+        assert!((cost - expected).abs() < f64::EPSILON);
+    }
+
     #[test]
     fn prices_cache_creation_breakdown_by_duration() {
         let usage = TokenUsageRaw {

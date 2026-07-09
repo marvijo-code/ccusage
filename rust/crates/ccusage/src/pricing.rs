@@ -1853,8 +1853,53 @@ mod tests {
         assert_eq!(gpt_55.output, 30e-6);
         assert_eq!(gpt_55.cache_read, 0.5e-6);
         assert!(gpt_55.cache_read_explicit);
+        assert_eq!(gpt_55.input_above_200k, Some(10e-6));
+        assert_eq!(gpt_55.output_above_200k, Some(45e-6));
+        assert_eq!(gpt_55.cache_read_above_200k, Some(1e-6));
         assert_eq!(gpt_55.fast_multiplier, 2.5);
         assert_eq!(pricing.context_limit("gpt-5.5"), Some(1_050_000));
+    }
+
+    #[test]
+    fn embedded_pricing_includes_gpt_5_6_family_for_offline_reports() {
+        let pricing = PricingMap::load_embedded();
+
+        let sol = pricing.find("gpt-5.6-sol").unwrap();
+        assert_eq!(sol.input, 5e-6);
+        assert_eq!(sol.output, 30e-6);
+        assert_eq!(sol.cache_create, 6.25e-6);
+        assert_eq!(sol.cache_read, 0.5e-6);
+        assert_eq!(sol.input_above_200k, Some(10e-6));
+        assert_eq!(sol.output_above_200k, Some(45e-6));
+        assert_eq!(sol.cache_create_above_200k, Some(12.5e-6));
+        assert_eq!(sol.cache_read_above_200k, Some(1e-6));
+        assert_eq!(pricing.context_limit("gpt-5.6-sol"), Some(1_050_000));
+
+        let terra = pricing.find("gpt-5.6-terra").unwrap();
+        assert_eq!(terra.input, 2.5e-6);
+        assert_eq!(terra.output, 15e-6);
+        assert_eq!(terra.input_above_200k, Some(5e-6));
+        assert_eq!(terra.output_above_200k, Some(22.5e-6));
+
+        let luna = pricing.find("gpt-5.6-luna").unwrap();
+        assert_eq!(luna.input, 1e-6);
+        assert_eq!(luna.output, 6e-6);
+        assert_eq!(luna.input_above_200k, Some(2e-6));
+        assert_eq!(luna.output_above_200k, Some(9e-6));
+    }
+
+    #[test]
+    fn embedded_litellm_pricing_keeps_openai_272k_rates() {
+        let pricing = PricingMap::load_embedded();
+        let dated_gpt_55 = pricing.find_exact("gpt-5.5-2026-04-23").unwrap();
+        let dated_gpt_54 = pricing.find_exact("gpt-5.4-2026-03-05").unwrap();
+
+        assert_eq!(dated_gpt_55.input_above_200k, Some(10e-6));
+        assert_eq!(dated_gpt_55.output_above_200k, Some(45e-6));
+        assert_eq!(dated_gpt_55.cache_read_above_200k, Some(1e-6));
+        assert_eq!(dated_gpt_54.input_above_200k, Some(5e-6));
+        assert_eq!(dated_gpt_54.output_above_200k, Some(22.5e-6));
+        assert_eq!(dated_gpt_54.cache_read_above_200k, Some(0.5e-6));
     }
 
     #[test]

@@ -231,6 +231,65 @@ mod tests {
     }
 
     #[test]
+    fn prices_codex_long_context_rates_per_request_before_aggregation() {
+        let mut pricing = PricingMap::default();
+        pricing.load_json(
+            r#"{
+                "gpt-long": {
+                    "input_cost_per_token": 0.000005,
+                    "output_cost_per_token": 0.000030,
+                    "cache_read_input_token_cost": 0.0000005,
+                    "input_cost_per_token_above_272k_tokens": 0.000010,
+                    "output_cost_per_token_above_272k_tokens": 0.000045,
+                    "cache_read_input_token_cost_above_272k_tokens": 0.000001
+                }
+            }"#,
+        );
+        let events = [
+            CodexTokenUsageEvent {
+                session_id: "session-long".to_string(),
+                timestamp: "2026-07-09T08:01:00.000Z".to_string(),
+                model: Some("gpt-long".to_string()),
+                input_tokens: 280_000,
+                cached_input_tokens: 20_000,
+                output_tokens: 500,
+                reasoning_output_tokens: 0,
+                total_tokens: 280_500,
+                is_fallback_model: false,
+            },
+            CodexTokenUsageEvent {
+                session_id: "session-short".to_string(),
+                timestamp: "2026-07-09T09:01:00.000Z".to_string(),
+                model: Some("gpt-long".to_string()),
+                input_tokens: 100_000,
+                cached_input_tokens: 50_000,
+                output_tokens: 300,
+                reasoning_output_tokens: 0,
+                total_tokens: 100_300,
+                is_fallback_model: false,
+            },
+        ];
+
+        let report = report_json(
+            &events,
+            AgentReportKind::Daily,
+            Some("UTC"),
+            &pricing,
+            CodexSpeed::Standard,
+        )
+        .unwrap();
+
+        let expected = 260_000.0 * 10e-6
+            + 20_000.0 * 1e-6
+            + 500.0 * 45e-6
+            + 50_000.0 * 5e-6
+            + 50_000.0 * 0.5e-6
+            + 300.0 * 30e-6;
+        let cost = report["daily"][0]["costUSD"].as_f64().unwrap();
+        assert!((cost - expected).abs() < 1e-9);
+    }
+
+    #[test]
     fn applies_speed_option_to_codex_cost() {
         let mut pricing = PricingMap::default();
         pricing.load_json(
