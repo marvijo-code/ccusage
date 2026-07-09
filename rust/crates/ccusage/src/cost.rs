@@ -114,6 +114,29 @@ pub(crate) fn calculate_cost_from_pricing(usage: crate::TokenUsageRaw, pricing: 
     let cache_create_1h_cost_above_200k = pricing
         .input_above_200k
         .map(|c| c * CACHE_CREATE_1H_INPUT_MULTIPLIER);
+    if let Some(threshold) = pricing.full_request_threshold {
+        let request_input_tokens = usage
+            .input_tokens
+            .saturating_add(cache_create_5m_tokens)
+            .saturating_add(cache_create_1h_tokens)
+            .saturating_add(usage.cache_read_input_tokens);
+        let uses_long_context_rates = request_input_tokens > threshold;
+        let request_rate = |base: f64, long_context: Option<f64>| {
+            if uses_long_context_rates {
+                long_context.unwrap_or(base)
+            } else {
+                base
+            }
+        };
+        return usage.input_tokens as f64 * request_rate(pricing.input, pricing.input_above_200k)
+            + usage.output_tokens as f64 * request_rate(pricing.output, pricing.output_above_200k)
+            + cache_create_5m_tokens as f64
+                * request_rate(pricing.cache_create, pricing.cache_create_above_200k)
+            + cache_create_1h_tokens as f64
+                * request_rate(cache_create_1h_cost, cache_create_1h_cost_above_200k)
+            + usage.cache_read_input_tokens as f64
+                * request_rate(pricing.cache_read, pricing.cache_read_above_200k);
+    }
     tiered_cost(usage.input_tokens, pricing.input, pricing.input_above_200k)
         + tiered_cost(
             usage.output_tokens,

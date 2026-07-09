@@ -114,6 +114,13 @@ fn compact_pricing_json(json: &str) -> Option<String> {
             ("output_cost_per_token_above_200k_tokens", "oa"),
             ("cache_creation_input_token_cost_above_200k_tokens", "cca"),
             ("cache_read_input_token_cost_above_200k_tokens", "cra"),
+            ("input_cost_per_token_above_272k_tokens", "ia272"),
+            ("output_cost_per_token_above_272k_tokens", "oa272"),
+            (
+                "cache_creation_input_token_cost_above_272k_tokens",
+                "cca272",
+            ),
+            ("cache_read_input_token_cost_above_272k_tokens", "cra272"),
             ("max_input_tokens", "ctx"),
         ] {
             let Some(value) = pricing.get(source) else {

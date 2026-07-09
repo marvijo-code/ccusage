@@ -24,6 +24,7 @@ const MODELS_DEV_FAILURE_RETRY_AFTER: Duration = Duration::from_secs(60);
 // Anthropic date-suffixed model aliases use YYYYMMDD, while other numeric
 // suffixes are treated as distinct model versions.
 const MODEL_DATE_SUFFIX_DIGITS: usize = 8;
+pub(crate) const OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS: u64 = 272_000;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Pricing {
@@ -36,6 +37,9 @@ pub(crate) struct Pricing {
     pub(crate) output_above_200k: Option<f64>,
     pub(crate) cache_create_above_200k: Option<f64>,
     pub(crate) cache_read_above_200k: Option<f64>,
+    /// When set, the request's combined input decides whether every token uses
+    /// the long-context rates. `None` preserves LiteLLM's marginal 200K tier.
+    pub(crate) full_request_threshold: Option<u64>,
     pub(crate) fast_multiplier: f64,
 }
 
@@ -51,6 +55,7 @@ impl Pricing {
             output_above_200k: None,
             cache_create_above_200k: None,
             cache_read_above_200k: None,
+            full_request_threshold: None,
             fast_multiplier: 1.0,
         }
     }
@@ -87,6 +92,10 @@ struct LiteLlmPricing {
     output_cost_per_token_above_200k_tokens: Option<f64>,
     cache_creation_input_token_cost_above_200k_tokens: Option<f64>,
     cache_read_input_token_cost_above_200k_tokens: Option<f64>,
+    input_cost_per_token_above_272k_tokens: Option<f64>,
+    output_cost_per_token_above_272k_tokens: Option<f64>,
+    cache_creation_input_token_cost_above_272k_tokens: Option<f64>,
+    cache_read_input_token_cost_above_272k_tokens: Option<f64>,
     max_input_tokens: Option<u64>,
     provider_specific_entry: Option<ProviderSpecificEntry>,
 }
@@ -106,6 +115,10 @@ struct CompactLiteLlmPricing {
     oa: Option<f64>,
     cca: Option<f64>,
     cra: Option<f64>,
+    ia272: Option<f64>,
+    oa272: Option<f64>,
+    cca272: Option<f64>,
+    cra272: Option<f64>,
     ctx: Option<u64>,
     fast: Option<f64>,
 }
@@ -283,6 +296,15 @@ impl PricingMap {
             };
             let context_limit = pricing.max_input_tokens;
             let cache_read_explicit = pricing.cache_read_input_token_cost.is_some();
+            let full_request_threshold = [
+                pricing.input_cost_per_token_above_272k_tokens,
+                pricing.output_cost_per_token_above_272k_tokens,
+                pricing.cache_creation_input_token_cost_above_272k_tokens,
+                pricing.cache_read_input_token_cost_above_272k_tokens,
+            ]
+            .iter()
+            .any(Option::is_some)
+            .then_some(OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS);
             let fast_multiplier = pricing
                 .provider_specific_entry
                 .and_then(|entry| entry.fast)
@@ -298,11 +320,19 @@ impl PricingMap {
                         .unwrap_or(input * 1.25),
                     cache_read: pricing.cache_read_input_token_cost.unwrap_or(input * 0.1),
                     cache_read_explicit,
-                    input_above_200k: pricing.input_cost_per_token_above_200k_tokens,
-                    output_above_200k: pricing.output_cost_per_token_above_200k_tokens,
+                    input_above_200k: pricing
+                        .input_cost_per_token_above_272k_tokens
+                        .or(pricing.input_cost_per_token_above_200k_tokens),
+                    output_above_200k: pricing
+                        .output_cost_per_token_above_272k_tokens
+                        .or(pricing.output_cost_per_token_above_200k_tokens),
                     cache_create_above_200k: pricing
-                        .cache_creation_input_token_cost_above_200k_tokens,
-                    cache_read_above_200k: pricing.cache_read_input_token_cost_above_200k_tokens,
+                        .cache_creation_input_token_cost_above_272k_tokens
+                        .or(pricing.cache_creation_input_token_cost_above_200k_tokens),
+                    cache_read_above_200k: pricing
+                        .cache_read_input_token_cost_above_272k_tokens
+                        .or(pricing.cache_read_input_token_cost_above_200k_tokens),
+                    full_request_threshold,
                     fast_multiplier,
                 },
             );
@@ -363,6 +393,7 @@ impl PricingMap {
                     output_above_200k: None,
                     cache_create_above_200k: None,
                     cache_read_above_200k: None,
+                    full_request_threshold: None,
                     fast_multiplier: 1.0,
                 },
             );
@@ -585,6 +616,7 @@ impl PricingMap {
                 .or(base.output_above_200k),
             cache_create_above_200k,
             cache_read_above_200k,
+            full_request_threshold: base.full_request_threshold,
             fast_multiplier: override_value
                 .fast_multiplier
                 .unwrap_or(base.fast_multiplier),
@@ -626,6 +658,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -641,6 +674,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: fast_multiplier_overrides
                     .multiplier_for("claude-opus-4-6")
                     .unwrap_or(1.0),
@@ -658,6 +692,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: fast_multiplier_overrides
                     .multiplier_for("claude-opus-4-7")
                     .unwrap_or(1.0),
@@ -675,6 +710,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: fast_multiplier_overrides
                     .multiplier_for("claude-opus-4-8")
                     .unwrap_or(1.0),
@@ -692,6 +728,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -707,6 +744,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -722,6 +760,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -737,6 +776,7 @@ impl PricingMap {
                 output_above_200k: Some(22.5e-6),
                 cache_create_above_200k: Some(7.5e-6),
                 cache_read_above_200k: Some(0.6e-6),
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -750,6 +790,7 @@ impl PricingMap {
             output_above_200k: None,
             cache_create_above_200k: None,
             cache_read_above_200k: None,
+            full_request_threshold: None,
             fast_multiplier: 1.0,
         };
         self.entries
@@ -768,6 +809,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -783,6 +825,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -798,6 +841,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -813,6 +857,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -824,10 +869,11 @@ impl PricingMap {
                 cache_create: 5e-6,
                 cache_read: 0.5e-6,
                 cache_read_explicit: true,
-                input_above_200k: None,
-                output_above_200k: None,
-                cache_create_above_200k: None,
-                cache_read_above_200k: None,
+                input_above_200k: Some(10e-6),
+                output_above_200k: Some(45e-6),
+                cache_create_above_200k: Some(10e-6),
+                cache_read_above_200k: Some(1e-6),
+                full_request_threshold: Some(OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS),
                 fast_multiplier: fast_multiplier_overrides
                     .multiplier_for("gpt-5.5")
                     .unwrap_or(1.0),
@@ -845,6 +891,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -861,6 +908,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -877,6 +925,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -890,6 +939,7 @@ impl PricingMap {
             output_above_200k: None,
             cache_create_above_200k: None,
             cache_read_above_200k: None,
+            full_request_threshold: None,
             fast_multiplier: 1.0,
         };
         self.entries.insert("gpt-5.1".to_string(), gpt_5_1_pricing);
@@ -905,6 +955,7 @@ impl PricingMap {
             output_above_200k: None,
             cache_create_above_200k: None,
             cache_read_above_200k: None,
+            full_request_threshold: None,
             fast_multiplier: 1.0,
         };
         self.entries
@@ -928,10 +979,11 @@ impl PricingMap {
                 cache_create: 2.5e-6,
                 cache_read: 0.25e-6,
                 cache_read_explicit: true,
-                input_above_200k: None,
-                output_above_200k: None,
-                cache_create_above_200k: None,
-                cache_read_above_200k: None,
+                input_above_200k: Some(5e-6),
+                output_above_200k: Some(22.5e-6),
+                cache_create_above_200k: Some(5e-6),
+                cache_read_above_200k: Some(0.5e-6),
+                full_request_threshold: Some(OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS),
                 fast_multiplier: fast_multiplier_overrides
                     .multiplier_for("gpt-5.4")
                     .unwrap_or(1.0),
@@ -949,6 +1001,7 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -964,9 +1017,33 @@ impl PricingMap {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
+        // Source: https://developers.openai.com/api/docs/pricing (Standard).
+        for (model, input, output, cache_create, cache_read) in [
+            ("gpt-5.6-sol", 5e-6, 30e-6, 6.25e-6, 0.5e-6),
+            ("gpt-5.6-terra", 2.5e-6, 15e-6, 3.125e-6, 0.25e-6),
+            ("gpt-5.6-luna", 1e-6, 6e-6, 1.25e-6, 0.1e-6),
+        ] {
+            self.entries.insert(
+                model.to_string(),
+                Pricing {
+                    input,
+                    output,
+                    cache_create,
+                    cache_read,
+                    cache_read_explicit: true,
+                    input_above_200k: Some(input * 2.0),
+                    output_above_200k: Some(output * 1.5),
+                    cache_create_above_200k: Some(cache_create * 2.0),
+                    cache_read_above_200k: Some(cache_read * 2.0),
+                    full_request_threshold: Some(OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS),
+                    fast_multiplier: 1.0,
+                },
+            );
+        }
         // Source: https://docs.z.ai/guides/overview/pricing
         let glm_pricing = |input: f64, output: f64, cache_read: f64| Pricing {
             input,
@@ -978,6 +1055,7 @@ impl PricingMap {
             output_above_200k: None,
             cache_create_above_200k: None,
             cache_read_above_200k: None,
+            full_request_threshold: None,
             fast_multiplier: 1.0,
         };
         let glm_base = glm_pricing(0.6e-6, 2.2e-6, 0.11e-6);
@@ -1038,6 +1116,9 @@ impl PricingMap {
         self.context_limits
             .insert("grok-4.3".to_string(), 1_000_000);
         self.context_limits.insert("gpt-5.4".to_string(), 1_050_000);
+        for model in ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"] {
+            self.context_limits.insert(model.to_string(), 1_050_000);
+        }
         for model in [
             "claude-opus-4-8",
             "claude-opus-4-7",
@@ -1082,6 +1163,10 @@ fn parse_litellm_pricing(value: Value) -> Option<LiteLlmPricing> {
             output_cost_per_token_above_200k_tokens: compact.oa,
             cache_creation_input_token_cost_above_200k_tokens: compact.cca,
             cache_read_input_token_cost_above_200k_tokens: compact.cra,
+            input_cost_per_token_above_272k_tokens: compact.ia272,
+            output_cost_per_token_above_272k_tokens: compact.oa272,
+            cache_creation_input_token_cost_above_272k_tokens: compact.cca272,
+            cache_read_input_token_cost_above_272k_tokens: compact.cra272,
             max_input_tokens: compact.ctx,
             provider_specific_entry: compact
                 .fast
@@ -2060,6 +2145,7 @@ mod tests {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -2075,6 +2161,7 @@ mod tests {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -2097,6 +2184,7 @@ mod tests {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -2236,6 +2324,7 @@ mod tests {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -2251,6 +2340,7 @@ mod tests {
                 output_above_200k: None,
                 cache_create_above_200k: None,
                 cache_read_above_200k: None,
+                full_request_threshold: None,
                 fast_multiplier: 1.0,
             },
         );
@@ -2317,6 +2407,7 @@ mod tests {
                     output_above_200k: None,
                     cache_create_above_200k: None,
                     cache_read_above_200k: None,
+                    full_request_threshold: None,
                     fast_multiplier: 1.5,
                 },
             );
@@ -2401,6 +2492,7 @@ mod tests {
                     output_above_200k: None,
                     cache_create_above_200k: Some(4.6875e-6),
                     cache_read_above_200k: Some(3.75e-7),
+                    full_request_threshold: None,
                     fast_multiplier: 1.0,
                 },
             );
@@ -2439,6 +2531,7 @@ mod tests {
                     output_above_200k: None,
                     cache_create_above_200k: None,
                     cache_read_above_200k: None,
+                    full_request_threshold: None,
                     fast_multiplier: 1.0,
                 },
             );
@@ -2469,6 +2562,7 @@ mod tests {
                     output_above_200k: None,
                     cache_create_above_200k: None,
                     cache_read_above_200k: None,
+                    full_request_threshold: None,
                     fast_multiplier: 1.0,
                 },
             );
