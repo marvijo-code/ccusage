@@ -114,38 +114,45 @@ pub(crate) fn calculate_cost_from_pricing(usage: crate::TokenUsageRaw, pricing: 
     let cache_create_1h_cost_above_200k = pricing
         .input_above_200k
         .map(|c| c * CACHE_CREATE_1H_INPUT_MULTIPLIER);
-    tiered_cost(usage.input_tokens, pricing.input, pricing.input_above_200k)
-        + tiered_cost(
-            usage.output_tokens,
-            pricing.output,
-            pricing.output_above_200k,
-        )
-        + tiered_cost(
-            cache_create_5m_tokens,
-            pricing.cache_create,
-            pricing.cache_create_above_200k,
-        )
-        + tiered_cost(
-            cache_create_1h_tokens,
-            cache_create_1h_cost,
-            cache_create_1h_cost_above_200k,
-        )
-        + tiered_cost(
-            usage.cache_read_input_tokens,
-            pricing.cache_read,
-            pricing.cache_read_above_200k,
-        )
+    let threshold = pricing
+        .long_context_threshold
+        .unwrap_or(crate::pricing::DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS);
+    tiered_cost(
+        usage.input_tokens,
+        pricing.input,
+        pricing.input_above_200k,
+        threshold,
+    ) + tiered_cost(
+        usage.output_tokens,
+        pricing.output,
+        pricing.output_above_200k,
+        threshold,
+    ) + tiered_cost(
+        cache_create_5m_tokens,
+        pricing.cache_create,
+        pricing.cache_create_above_200k,
+        threshold,
+    ) + tiered_cost(
+        cache_create_1h_tokens,
+        cache_create_1h_cost,
+        cache_create_1h_cost_above_200k,
+        threshold,
+    ) + tiered_cost(
+        usage.cache_read_input_tokens,
+        pricing.cache_read,
+        pricing.cache_read_above_200k,
+        threshold,
+    )
 }
 
-pub(crate) fn tiered_cost(tokens: u64, base: f64, above: Option<f64>) -> f64 {
-    const THRESHOLD: u64 = 200_000;
+pub(crate) fn tiered_cost(tokens: u64, base: f64, above: Option<f64>, threshold: u64) -> f64 {
     if tokens == 0 {
         return 0.0;
     }
     if let Some(above) = above
-        && tokens > THRESHOLD
+        && tokens > threshold
     {
-        return (THRESHOLD as f64 * base) + ((tokens - THRESHOLD) as f64 * above);
+        return (threshold as f64 * base) + ((tokens - threshold) as f64 * above);
     }
     tokens as f64 * base
 }
