@@ -335,6 +335,11 @@ fn accumulate_codex_event_into_group(
     model_usage.output_tokens += event.output_tokens;
     model_usage.reasoning_output_tokens += event.reasoning_output_tokens;
     model_usage.total_tokens += event.total_tokens;
+    if event.input_tokens > crate::pricing::OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS {
+        model_usage.long_context_input_tokens += event.input_tokens;
+        model_usage.long_context_cached_input_tokens += event.cached_input_tokens;
+        model_usage.long_context_output_tokens += event.output_tokens;
+    }
     model_usage.is_fallback |= event.is_fallback_model;
 }
 
@@ -415,6 +420,9 @@ fn merge_groups(target: &mut BTreeMap<String, CodexGroup>, source: BTreeMap<Stri
             target_usage.output_tokens += usage.output_tokens;
             target_usage.reasoning_output_tokens += usage.reasoning_output_tokens;
             target_usage.total_tokens += usage.total_tokens;
+            target_usage.long_context_input_tokens += usage.long_context_input_tokens;
+            target_usage.long_context_cached_input_tokens += usage.long_context_cached_input_tokens;
+            target_usage.long_context_output_tokens += usage.long_context_output_tokens;
             target_usage.is_fallback |= usage.is_fallback;
         }
     }

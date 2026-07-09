@@ -134,7 +134,6 @@ pub(crate) fn calculate_codex_model_cost(
     let Some(pricing) = pricing.find(model) else {
         return 0.0;
     };
-    let non_cached_input = usage.input_tokens.saturating_sub(usage.cached_input_tokens);
     let multiplier = if matches!(speed, CodexSpeed::Fast) {
         if pricing.fast_multiplier == 1.0 {
             2.0
@@ -149,9 +148,36 @@ pub(crate) fn calculate_codex_model_cost(
     } else {
         pricing.input
     };
-    (non_cached_input as f64 * pricing.input
-        + usage.cached_input_tokens as f64 * cache_read
-        + usage.output_tokens as f64 * pricing.output)
+    let long_input_rate = pricing.input_above_200k.unwrap_or(pricing.input);
+    let long_output_rate = pricing.output_above_200k.unwrap_or(pricing.output);
+    let long_cache_read = if pricing.cache_read_explicit {
+        pricing.cache_read_above_200k.unwrap_or(cache_read)
+    } else {
+        long_input_rate
+    };
+    let long_input = pricing.full_request_threshold.map_or(0, |_| {
+        usage.long_context_input_tokens.min(usage.input_tokens)
+    });
+    let long_cached = if long_input == 0 {
+        0
+    } else {
+        usage
+            .long_context_cached_input_tokens
+            .min(usage.cached_input_tokens)
+            .min(long_input)
+    };
+    let long_output = pricing.full_request_threshold.map_or(0, |_| {
+        usage.long_context_output_tokens.min(usage.output_tokens)
+    });
+    let short_non_cached =
+        (usage.input_tokens - long_input).saturating_sub(usage.cached_input_tokens - long_cached);
+    let long_non_cached = long_input - long_cached;
+    (short_non_cached as f64 * pricing.input
+        + (usage.cached_input_tokens - long_cached) as f64 * cache_read
+        + (usage.output_tokens - long_output) as f64 * pricing.output
+        + long_non_cached as f64 * long_input_rate
+        + long_cached as f64 * long_cache_read
+        + long_output as f64 * long_output_rate)
         * multiplier
 }
 

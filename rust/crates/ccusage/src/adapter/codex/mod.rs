@@ -222,7 +222,7 @@ mod tests {
             output_tokens: 5,
             reasoning_output_tokens: 0,
             total_tokens: 105,
-            is_fallback: false,
+            ..CodexModelUsage::default()
         };
 
         let cost = calculate_codex_model_cost("gpt-test", &usage, &pricing, CodexSpeed::Standard);
@@ -307,7 +307,7 @@ mod tests {
             output_tokens: 5,
             reasoning_output_tokens: 0,
             total_tokens: 105,
-            is_fallback: false,
+            ..CodexModelUsage::default()
         };
 
         let standard =

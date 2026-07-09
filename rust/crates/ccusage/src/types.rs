@@ -157,6 +157,11 @@ pub(crate) struct CodexModelUsage {
     pub(crate) output_tokens: u64,
     pub(crate) reasoning_output_tokens: u64,
     pub(crate) total_tokens: u64,
+    /// Portions of the totals produced by requests above OpenAI's 272K input
+    /// cutoff. The request split cannot be reconstructed after aggregation.
+    pub(crate) long_context_input_tokens: u64,
+    pub(crate) long_context_cached_input_tokens: u64,
+    pub(crate) long_context_output_tokens: u64,
     pub(crate) is_fallback: bool,
 }
 
