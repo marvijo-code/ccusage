@@ -639,7 +639,10 @@ impl PricingMap {
     /// entries only carry the flat rates. Runs after every pricing load
     /// (embedded and live) because LiteLLM refreshes replace whole entries.
     /// Entries that already carry any tier rate are left untouched so
-    /// upstream data wins once it exists.
+    /// upstream data wins once it exists. The check is deliberately
+    /// all-or-nothing rather than per field: upstream `*_above_200k_tokens`
+    /// values assume the 200K boundary, so mixing them with built-in rates
+    /// that assume the OpenAI 272K boundary would price both tiers wrong.
     fn apply_builtin_long_context_rates(&mut self) {
         for (model, pricing) in &mut self.entries {
             if pricing.input_above_200k.is_some()
