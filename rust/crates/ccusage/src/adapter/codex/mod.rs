@@ -36,7 +36,7 @@ pub(crate) fn run(args: AgentCommandArgs) -> Result<()> {
         log_level() != Some(0),
         shared.pricing_overrides.iter(),
     );
-    let groups = load_groups(&shared, args.kind)?;
+    let groups = load_groups(&shared, args.kind, &pricing)?;
     let speed = resolve_codex_speed(args.codex_speed);
     if wants_json(&shared) {
         let output = report_from_groups(&groups, args.kind, &pricing, speed);
@@ -53,7 +53,7 @@ pub(crate) fn report_json(
     pricing: &PricingMap,
     speed: CodexSpeed,
 ) -> Result<Value> {
-    let groups = aggregate_events(events, kind, timezone)?;
+    let groups = aggregate_events(events, kind, timezone, pricing)?;
     Ok(report_from_groups(&groups, kind, pricing, speed))
 }
 
@@ -83,8 +83,13 @@ mod tests {
             ..SharedArgs::default()
         };
 
-        let groups =
-            load_groups_from_directory(&sessions_dir, &shared, AgentReportKind::Daily).unwrap();
+        let groups = load_groups_from_directory(
+            &sessions_dir,
+            &shared,
+            AgentReportKind::Daily,
+            &PricingMap::load_embedded(),
+        )
+        .unwrap();
 
         assert_eq!(groups.len(), 1);
         let group = groups.get("2026-01-03").unwrap();
@@ -108,8 +113,13 @@ mod tests {
             ..SharedArgs::default()
         };
 
-        let groups =
-            load_groups_from_directory(&sessions_dir, &shared, AgentReportKind::Daily).unwrap();
+        let groups = load_groups_from_directory(
+            &sessions_dir,
+            &shared,
+            AgentReportKind::Daily,
+            &PricingMap::load_embedded(),
+        )
+        .unwrap();
 
         assert_eq!(groups.len(), 1);
         let group = groups.get("2026-01-02").unwrap();

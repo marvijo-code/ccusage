@@ -452,6 +452,22 @@ impl PricingMap {
         self.entries.get(model).copied()
     }
 
+    /// Input-token boundary above which a request is billed at `model`'s
+    /// long-context tier. Codex aggregates per-model token sums before cost is
+    /// computed, so each request's tier is decided during aggregation. The
+    /// boundary is read from the resolved pricing entry (not
+    /// `builtin_long_context_rates` alone) so it reflects upstream tier data
+    /// that supersedes the built-in overlay: when LiteLLM publishes
+    /// `*_above_200k_tokens` for a built-in OpenAI model the overlay defers and
+    /// `long_context_threshold` becomes `None`, which correctly resolves to the
+    /// 200K default here rather than the built-in 272K boundary. Models with no
+    /// long-context tier also fall back to the default.
+    pub(crate) fn long_context_split_threshold(&self, model: &str) -> u64 {
+        self.find(model)
+            .and_then(|pricing| pricing.long_context_threshold)
+            .unwrap_or(DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS)
+    }
+
     fn find_entry_or_alias(&self, model: &str) -> Option<Pricing> {
         self.find_entry(model)
             .or_else(|| pricing_alias(model).and_then(|alias| self.find_entry(alias)))
@@ -1345,19 +1361,6 @@ fn builtin_long_context_rates(base_model: &str) -> Option<LongContextRates> {
     }
 }
 
-/// Input-token boundary above which a request is billed at a model's
-/// long-context tier. Codex aggregates per-model token sums before pricing is
-/// applied, so each request's tier must be decided during aggregation from the
-/// model's own threshold rather than a single global constant. This returns the
-/// same value `apply_builtin_long_context_rates` stamps onto
-/// `Pricing::long_context_threshold`, and falls back to the default 200K
-/// boundary used for LiteLLM `*_above_200k_tokens` data.
-pub(crate) fn long_context_split_threshold(model: &str) -> u64 {
-    builtin_long_context_rates(model_without_date_suffix(model))
-        .map(|rates| rates.threshold)
-        .unwrap_or(DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS)
-}
-
 /// Strips a trailing release-date suffix (`-YYYY-MM-DD` or `-YYYYMMDD`) so
 /// date-pinned pricing keys share their base model's long-context rates.
 fn model_without_date_suffix(model: &str) -> &str {
@@ -1487,7 +1490,7 @@ fn fetch_json_url(url: &str) -> std::io::Result<String> {
 mod tests {
     use super::{
         BUILD_TIME_MODELS_DEV_JSON, BUILD_TIME_PRICING_JSON, Pricing, PricingMap,
-        embedded_models_dev_pricing, long_context_split_threshold, model_without_date_suffix,
+        embedded_models_dev_pricing, model_without_date_suffix,
     };
     use ccusage_test_support::fs_fixture;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -2139,16 +2142,52 @@ mod tests {
 
     #[test]
     fn long_context_split_threshold_is_per_model() {
+        let pricing = PricingMap::load_embedded();
+
         // OpenAI two-stage models switch tiers above 272K input tokens.
-        assert_eq!(long_context_split_threshold("gpt-5.6-sol"), 272_000);
-        assert_eq!(long_context_split_threshold("gpt-5.5"), 272_000);
-        assert_eq!(long_context_split_threshold("gpt-5.5-pro"), 272_000);
+        assert_eq!(pricing.long_context_split_threshold("gpt-5.6-sol"), 272_000);
+        assert_eq!(pricing.long_context_split_threshold("gpt-5.5"), 272_000);
+        assert_eq!(pricing.long_context_split_threshold("gpt-5.5-pro"), 272_000);
         // Date-pinned keys share their base model's boundary.
-        assert_eq!(long_context_split_threshold("gpt-5.5-2026-04-23"), 272_000);
+        assert_eq!(
+            pricing.long_context_split_threshold("gpt-5.5-2026-04-23"),
+            272_000
+        );
         // Models without a built-in tier fall back to the 200K default used for
         // LiteLLM `*_above_200k_tokens` data.
-        assert_eq!(long_context_split_threshold("gpt-5"), 200_000);
-        assert_eq!(long_context_split_threshold("gpt-5.4-mini"), 200_000);
+        assert_eq!(pricing.long_context_split_threshold("gpt-5"), 200_000);
+        assert_eq!(
+            pricing.long_context_split_threshold("gpt-5.4-mini"),
+            200_000
+        );
+    }
+
+    #[test]
+    fn long_context_split_threshold_defers_to_upstream_tier_data() {
+        let mut pricing = PricingMap::load_embedded();
+        // Without upstream tier data the built-in overlay stamps the 272K
+        // OpenAI boundary.
+        assert_eq!(pricing.long_context_split_threshold("gpt-5.5"), 272_000);
+
+        // A live LiteLLM refresh publishes `*_above_200k_tokens` for gpt-5.5,
+        // so the overlay defers and the entry keeps the 200K boundary those
+        // rates assume. The split threshold must follow the resolved entry.
+        pricing.load_json(
+            r#"{
+                "gpt-5.5": {
+                    "input_cost_per_token": 0.000006,
+                    "output_cost_per_token": 0.000031,
+                    "input_cost_per_token_above_200k_tokens": 0.000012
+                }
+            }"#,
+        );
+        pricing.apply_builtin_long_context_rates();
+
+        assert_eq!(
+            pricing.find("gpt-5.5").unwrap().long_context_threshold,
+            None
+        );
+        assert_eq!(pricing.long_context_split_threshold("gpt-5.5"), 200_000);
     }
 
     #[test]
