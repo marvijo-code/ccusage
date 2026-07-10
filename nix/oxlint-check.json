@@ -8,5 +8,9 @@
 		".git",
 		".claude/settings.local.json",
 		"nix/models-dev-gen.ts"
-	]
+	],
+	"jsPlugins": ["./oxlint-plugin.js"],
+	"rules": {
+		"ccusage/no-server-actions": "error"
+	}
 }

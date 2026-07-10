@@ -9,8 +9,12 @@
 		".claude/settings.local.json",
 		"nix/models-dev-gen.ts"
 	],
+	"jsPlugins": ["./nix/oxlint-plugin.js"],
 	"options": {
 		"typeAware": true,
 		"typeCheck": true
+	},
+	"rules": {
+		"ccusage/no-server-actions": "error"
 	}
 }
