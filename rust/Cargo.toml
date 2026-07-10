@@ -1,6 +1,7 @@
 [workspace]
 members = [
 	"crates/ccusage",
+	"crates/ccusage-adapter-common",
 	"crates/ccusage-cli",
 	"crates/ccusage-core",
 	"crates/ccusage-terminal",

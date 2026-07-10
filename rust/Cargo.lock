@@ -107,6 +107,7 @@ dependencies = [
 name = "ccusage"
 version = "0.0.0"
 dependencies = [
+ "ccusage-adapter-common",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -123,6 +124,16 @@ dependencies = [
  "smallvec",
  "sqlite",
  "ureq",
+]
+
+[[package]]
+name = "ccusage-adapter-common"
+version = "0.0.0"
+dependencies = [
+ "ccusage-core",
+ "ccusage-test-support",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

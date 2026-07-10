@@ -6,7 +6,7 @@
 //! loader so every adapter shares the same optimizations:
 //!
 //! 1. Read the whole file once and split it into byte slices with
-//!    [`byte_lines`](crate::fast::byte_lines), avoiding a `String` allocation
+//!    [`byte_lines`](ccusage_core::fast::byte_lines), avoiding a `String` allocation
 //!    per line.
 //! 2. Skip lines that cannot possibly match using a precompiled `memmem`
 //!    substring prefilter, before any JSON parsing happens.
@@ -16,7 +16,7 @@
 
 use serde::{Deserialize, Deserializer, de::DeserializeOwned};
 
-use crate::fast::{LinePrefilter, byte_lines};
+use ccusage_core::fast::{LinePrefilter, byte_lines};
 
 /// Iterate over deserialized JSONL records contained in `content`.
 ///
@@ -44,7 +44,7 @@ use crate::fast::{LinePrefilter, byte_lines};
 ///     .collect();
 /// assert_eq!(models, ["qwen3-coder"]);
 /// ```
-pub(crate) fn records<'data, T>(
+pub fn records<'data, T>(
     content: &'data [u8],
     prefilter: Option<&'data LinePrefilter>,
 ) -> impl Iterator<Item = T> + 'data
@@ -72,7 +72,7 @@ where
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_u64")]` so a
 /// missing field also defaults to `0`.
-pub(crate) fn lenient_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
+pub fn lenient_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -92,7 +92,7 @@ where
 /// whole record.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_i64")]`.
-pub(crate) fn lenient_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+pub fn lenient_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -109,7 +109,7 @@ where
 /// record.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_f64")]`.
-pub(crate) fn lenient_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+pub fn lenient_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -128,7 +128,7 @@ where
 /// record.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_object")]`.
-pub(crate) fn lenient_object<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+pub fn lenient_object<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: DeserializeOwned,
@@ -152,7 +152,7 @@ where
 /// was present (even if empty) apart from a missing or non-array field.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_array")]`.
-pub(crate) fn lenient_array<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>
+pub fn lenient_array<'de, D, T>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>
 where
     D: Deserializer<'de>,
     T: DeserializeOwned,
@@ -177,7 +177,7 @@ where
 /// from an absent field.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::lenient_vec")]`.
-pub(crate) fn lenient_vec<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+pub fn lenient_vec<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: DeserializeOwned,
@@ -187,18 +187,18 @@ where
 
 /// Deserialize a JSON value into a trimmed, non-empty [`String`].
 ///
-/// Mirrors [`crate::non_empty_json_string`]: non-string values and
+/// Mirrors [`ccusage_core::non_empty_json_string`]: non-string values and
 /// empty-after-trim strings become `None`, and surviving strings are trimmed.
 /// This keeps typed structs lenient about unexpected field types instead of
 /// erroring on the whole line.
 ///
 /// Use with `#[serde(default, deserialize_with = "jsonl::non_empty_string")]`.
-pub(crate) fn non_empty_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+pub fn non_empty_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let value = Option::<serde_json::Value>::deserialize(deserializer)?;
-    Ok(crate::non_empty_json_string(value.as_ref()))
+    Ok(ccusage_core::non_empty_json_string(value.as_ref()))
 }
 
 #[cfg(test)]
@@ -209,7 +209,7 @@ mod tests {
         lenient_array, lenient_f64, lenient_i64, lenient_object, lenient_u64, lenient_vec,
         non_empty_string, records,
     };
-    use crate::fast::LinePrefilter;
+    use ccusage_core::fast::LinePrefilter;
 
     #[derive(Debug, PartialEq, Deserialize)]
     struct Record {

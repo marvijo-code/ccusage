@@ -2,12 +2,13 @@ mod adapter;
 mod cli;
 mod commands;
 
-pub(crate) use adapter::claude::{
-    chunk_file_indexes_by_size, collect_files_with_extension, collect_usage_files,
-    filter_loaded_entries_by_date, load_daily_summaries, load_entries,
-};
+pub(crate) use adapter::claude::{load_daily_summaries, load_entries};
 pub(crate) use adapter::codex::{CodexGroup, CodexModelUsage, CodexRawUsage, CodexTokenUsageEvent};
 pub(crate) use adapter::read_files_parallel;
+pub(crate) use ccusage_adapter_common::{
+    chunk_file_indexes_by_size, collect_files_with_extension, collect_usage_files,
+    filter_loaded_entries_by_date,
+};
 pub(crate) use ccusage_core::*;
 use cli::{AgentCommandArgs, AgentReportKind, Command};
 use pricing::{Pricing, PricingMap};

@@ -13,6 +13,7 @@ name = "generate-config-schema"
 path = "src/bin/generate_config_schema.rs"
 
 [dependencies]
+ccusage-adapter-common = { path = "../ccusage-adapter-common" }
 ccusage-cli = { path = "../ccusage-cli" }
 ccusage-core = { path = "../ccusage-core" }
 ccusage-terminal = { path = "../ccusage-terminal" }

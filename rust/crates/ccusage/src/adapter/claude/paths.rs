@@ -1,5 +1,5 @@
 use std::{
-    env, fs,
+    env,
     path::{Path, PathBuf},
 };
 
@@ -9,6 +9,7 @@ use memchr::memmem;
 use crate::{Result, cli_error, fast::FxHashSet, home, path_utils::expand_home_path};
 #[cfg(test)]
 use crate::{TimestampMs, parse_ts_timestamp};
+use ccusage_adapter_common::collect_usage_files;
 
 pub(crate) fn claude_paths() -> Result<Vec<PathBuf>> {
     let mut paths = Vec::new();
@@ -74,28 +75,6 @@ pub(super) fn is_project_path_segment(value: &str) -> bool {
         && value != ".."
         && !value.contains('/')
         && !value.contains('\\')
-}
-
-pub(crate) fn collect_usage_files(dir: &Path, files: &mut Vec<PathBuf>) {
-    collect_files_with_extension(dir, "jsonl", files);
-}
-
-pub(crate) fn collect_files_with_extension(dir: &Path, extension: &str, files: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-
-    for entry in entries.filter_map(std::result::Result::ok) {
-        let Ok(file_type) = entry.file_type() else {
-            continue;
-        };
-        let path = entry.path();
-        if file_type.is_file() && path.extension().is_some_and(|ext| ext == extension) {
-            files.push(path);
-        } else if file_type.is_dir() {
-            collect_files_with_extension(&path, extension, files);
-        }
-    }
 }
 
 #[cfg(test)]

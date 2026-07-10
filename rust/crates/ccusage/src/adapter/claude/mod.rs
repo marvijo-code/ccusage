@@ -23,13 +23,11 @@ use crate::{
     format_date_tz, log_level, missing_pricing_model_for_usage, parse_ts_timestamp, parse_tz,
     progress,
 };
+use ccusage_adapter_common::chunk_file_indexes_by_size;
 
 #[cfg(test)]
 pub(crate) use paths::timestamp_from_line;
-pub(crate) use paths::{
-    claude_paths, collect_files_with_extension, collect_usage_files, extract_project,
-    extract_session_parts, usage_files,
-};
+pub(crate) use paths::{claude_paths, extract_project, extract_session_parts, usage_files};
 
 pub(crate) fn load_entries(
     shared: &SharedArgs,
@@ -121,47 +119,6 @@ fn load_entries_inner(
         format!("Kept {} usage entries after deduplication", deduped.len()),
     );
     Ok(deduped)
-}
-
-pub(crate) fn filter_loaded_entries_by_date(entries: &mut Vec<LoadedEntry>, shared: &SharedArgs) {
-    if shared.since.is_none() && shared.until.is_none() {
-        return;
-    }
-    entries.retain(|entry| {
-        let date = entry.date.replace('-', "");
-        shared.since.as_ref().is_none_or(|since| &date >= since)
-            && shared.until.as_ref().is_none_or(|until| &date <= until)
-    });
-}
-
-pub(crate) fn chunk_file_indexes_by_size(files: &[PathBuf], chunk_count: usize) -> Vec<Vec<usize>> {
-    let mut weighted_indexes = Vec::with_capacity(files.len());
-    for (index, file) in files.iter().enumerate() {
-        let size = fs::metadata(file).map_or(0, |metadata| metadata.len());
-        weighted_indexes.push((index, size));
-    }
-    weighted_indexes.sort_unstable_by(|a, b| match b.1.cmp(&a.1) {
-        std::cmp::Ordering::Equal => a.0.cmp(&b.0),
-        order => order,
-    });
-
-    let mut chunks = vec![Vec::new(); chunk_count];
-    let mut chunk_sizes = vec![0_u64; chunk_count];
-    for (index, size) in weighted_indexes {
-        let mut target = 0;
-        for candidate in 1..chunk_sizes.len() {
-            if chunk_sizes[candidate] < chunk_sizes[target] {
-                target = candidate;
-            }
-        }
-        chunks[target].push(index);
-        chunk_sizes[target] = chunk_sizes[target].saturating_add(size);
-    }
-
-    chunks
-        .into_iter()
-        .filter(|chunk| !chunk.is_empty())
-        .collect()
 }
 
 fn read_usage_files_parallel(
