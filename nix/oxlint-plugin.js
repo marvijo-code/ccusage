@@ -4,8 +4,7 @@ const noServerActions = {
 			ExpressionStatement(node) {
 				if (node.directive === 'use server') {
 					context.report({
-						message:
-							'Server Actions are not allowed. Remove the "use server" directive.',
+						message: 'Server Actions are not allowed. Remove the "use server" directive.',
 						node,
 					});
 				}
