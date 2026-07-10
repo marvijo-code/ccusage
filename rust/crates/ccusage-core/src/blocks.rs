@@ -14,7 +14,7 @@ use crate::{
     should_use_compact_layout, terminal_width, utc_now,
 };
 
-pub(crate) fn identify_session_blocks(
+pub fn identify_session_blocks(
     mut entries: Vec<LoadedEntry>,
     session_duration_hours: f64,
 ) -> Vec<SessionBlock> {
@@ -127,7 +127,7 @@ fn create_gap_block(last: TimestampMs, next: TimestampMs, duration: i64) -> Sess
     }
 }
 
-pub(crate) fn filter_blocks_by_date(blocks: &mut Vec<SessionBlock>, shared: &SharedArgs) {
+pub fn filter_blocks_by_date(blocks: &mut Vec<SessionBlock>, shared: &SharedArgs) {
     if shared.since.is_none() && shared.until.is_none() {
         return;
     }
@@ -138,18 +138,14 @@ pub(crate) fn filter_blocks_by_date(blocks: &mut Vec<SessionBlock>, shared: &Sha
     });
 }
 
-pub(crate) fn sort_blocks(blocks: &mut [SessionBlock], order: &SortOrder) {
+pub fn sort_blocks(blocks: &mut [SessionBlock], order: &SortOrder) {
     blocks.sort_by_key(|block| block.start_time);
     if *order == SortOrder::Desc {
         blocks.reverse();
     }
 }
 
-pub(crate) fn block_json(
-    block: &SessionBlock,
-    token_limit: Option<&str>,
-    max_tokens: u64,
-) -> Value {
+pub fn block_json(block: &SessionBlock, token_limit: Option<&str>, max_tokens: u64) -> Value {
     let burn_rate = if block.is_active {
         calculate_burn_rate(block)
     } else {
@@ -296,7 +292,7 @@ fn format_local_block_end(timestamp: TimestampMs, compact: bool) -> String {
     }
 }
 
-pub(crate) fn print_blocks_table(
+pub fn print_blocks_table(
     blocks: &[SessionBlock],
     token_limit: Option<&str>,
     max_tokens: u64,
@@ -430,7 +426,7 @@ pub(crate) fn print_blocks_table(
     Ok(())
 }
 
-pub(crate) fn print_active_block_detail(
+pub fn print_active_block_detail(
     block: &SessionBlock,
     token_limit: Option<&str>,
     max_tokens: u64,
@@ -532,7 +528,7 @@ pub(crate) fn print_active_block_detail(
     }
 }
 
-pub(crate) fn calculate_burn_rate(block: &SessionBlock) -> Option<BurnRate> {
+pub fn calculate_burn_rate(block: &SessionBlock) -> Option<BurnRate> {
     if block.entries.is_empty() || block.is_gap {
         return None;
     }
@@ -575,7 +571,7 @@ fn parse_token_limit(value: Option<&str>, max_tokens: u64) -> Option<u64> {
     }
 }
 
-pub(crate) fn format_remaining_time(minutes: i64) -> String {
+pub fn format_remaining_time(minutes: i64) -> String {
     let hours = minutes / 60;
     let mins = minutes % 60;
     if hours > 0 {

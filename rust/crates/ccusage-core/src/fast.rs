@@ -1,9 +1,9 @@
 use memchr::{memchr, memmem::Finder};
 use smallvec::SmallVec;
 
-pub(crate) type FxHashMap<K, V> = rustc_hash::FxHashMap<K, V>;
-pub(crate) type FxHashSet<T> = rustc_hash::FxHashSet<T>;
-pub(crate) type SmallIndexVec = SmallVec<[usize; 1]>;
+pub type FxHashMap<K, V> = rustc_hash::FxHashMap<K, V>;
+pub type FxHashSet<T> = rustc_hash::FxHashSet<T>;
+pub type SmallIndexVec = SmallVec<[usize; 1]>;
 
 /// Whether a [`LinePrefilter`] requires every marker or just one of them.
 #[derive(Clone, Copy)]
@@ -21,7 +21,7 @@ enum PrefilterMode {
 /// reusing them across every line keeps that skip check on the SIMD-accelerated
 /// `memmem` path instead of allocating a fresh searcher per `str::contains`
 /// call.
-pub(crate) struct LinePrefilter {
+pub struct LinePrefilter {
     finders: SmallVec<[Finder<'static>; 4]>,
     mode: PrefilterMode,
 }
@@ -36,12 +36,12 @@ impl LinePrefilter {
     /// assert!(prefilter.matches(br#"{"message":{"usage":{}}}"#));
     /// assert!(!prefilter.matches(br#"{"message":{}}"#));
     /// ```
-    pub(crate) fn all(markers: &[&[u8]]) -> Self {
+    pub fn all(markers: &[&[u8]]) -> Self {
         Self::new(markers, PrefilterMode::All)
     }
 
     /// Build a prefilter that admits lines containing *any* of `markers`.
-    pub(crate) fn any(markers: &[&[u8]]) -> Self {
+    pub fn any(markers: &[&[u8]]) -> Self {
         Self::new(markers, PrefilterMode::Any)
     }
 
@@ -56,7 +56,7 @@ impl LinePrefilter {
     }
 
     /// Return `true` when `line` passes the filter and is worth parsing.
-    pub(crate) fn matches(&self, line: &[u8]) -> bool {
+    pub fn matches(&self, line: &[u8]) -> bool {
         match self.mode {
             PrefilterMode::All => self
                 .finders
@@ -70,12 +70,12 @@ impl LinePrefilter {
     }
 }
 
-pub(crate) struct ByteLines<'a> {
+pub struct ByteLines<'a> {
     bytes: &'a [u8],
 }
 
 impl<'a> ByteLines<'a> {
-    pub(crate) fn new(bytes: &'a [u8]) -> Self {
+    pub fn new(bytes: &'a [u8]) -> Self {
         Self { bytes }
     }
 }
@@ -99,11 +99,11 @@ impl<'a> Iterator for ByteLines<'a> {
     }
 }
 
-pub(crate) fn byte_lines(bytes: &[u8]) -> ByteLines<'_> {
+pub fn byte_lines(bytes: &[u8]) -> ByteLines<'_> {
     ByteLines::new(bytes)
 }
 
-pub(crate) fn suffix_string(value: &str, suffix: &str) -> String {
+pub fn suffix_string(value: &str, suffix: &str) -> String {
     let mut output = String::with_capacity(value.len() + suffix.len());
     output.push_str(value);
     output.push_str(suffix);

@@ -14,7 +14,7 @@ thread_local! {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum UsageLoadAgent {
+pub enum UsageLoadAgent {
     Claude,
     Codex,
     OpenCode,
@@ -34,13 +34,13 @@ pub(crate) enum UsageLoadAgent {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum LoadProgressState {
+pub enum LoadProgressState {
     Loading,
     Succeeded,
     Failed,
 }
 
-pub(crate) fn should_show_usage_load_progress(json: bool, output_is_tty: bool) -> bool {
+pub fn should_show_usage_load_progress(json: bool, output_is_tty: bool) -> bool {
     !json && output_is_tty
 }
 
@@ -102,11 +102,11 @@ fn format_usage_load_progress_text(
     }
 }
 
-pub(crate) fn usage_load_output_is_tty() -> bool {
+pub fn usage_load_output_is_tty() -> bool {
     io::stdout().is_terminal()
 }
 
-pub(crate) struct UsageLoadProgress {
+pub struct UsageLoadProgress {
     enabled: bool,
     controller: Option<ProgressController>,
     owns_session: bool,
@@ -129,7 +129,7 @@ struct ProgressState {
 }
 
 impl UsageLoadProgress {
-    pub(crate) fn new(enabled: bool) -> Self {
+    pub fn new(enabled: bool) -> Self {
         if !enabled {
             return Self {
                 enabled,
@@ -194,19 +194,19 @@ impl UsageLoadProgress {
         }
     }
 
-    pub(crate) fn start(&mut self, agent: UsageLoadAgent) {
+    pub fn start(&mut self, agent: UsageLoadAgent) {
         self.set_state(agent, LoadProgressState::Loading);
     }
 
-    pub(crate) fn succeed(&mut self, agent: UsageLoadAgent) {
+    pub fn succeed(&mut self, agent: UsageLoadAgent) {
         self.set_state(agent, LoadProgressState::Succeeded);
     }
 
-    pub(crate) fn fail(&mut self, agent: UsageLoadAgent) {
+    pub fn fail(&mut self, agent: UsageLoadAgent) {
         self.set_state(agent, LoadProgressState::Failed);
     }
 
-    pub(crate) fn stop(&mut self) {
+    pub fn stop(&mut self) {
         if !self.enabled || self.stopped {
             return;
         }
@@ -239,7 +239,7 @@ impl UsageLoadProgress {
         });
     }
 
-    pub(crate) fn set_status(&mut self, status: Option<String>) {
+    pub fn set_status(&mut self, status: Option<String>) {
         let Some(controller) = self.controller.as_ref() else {
             return;
         };
@@ -295,7 +295,7 @@ impl ProgressState {
     }
 }
 
-pub(crate) fn track_usage_load<T, E>(
+pub fn track_usage_load<T, E>(
     agent: UsageLoadAgent,
     json: bool,
     load: impl FnOnce() -> std::result::Result<T, E>,
@@ -313,11 +313,7 @@ pub(crate) fn track_usage_load<T, E>(
     result
 }
 
-pub(crate) fn track_status<T>(
-    enabled: bool,
-    status: impl Into<String>,
-    run: impl FnOnce() -> T,
-) -> T {
+pub fn track_status<T>(enabled: bool, status: impl Into<String>, run: impl FnOnce() -> T) -> T {
     let mut progress = UsageLoadProgress::new(enabled);
     progress.set_status(Some(status.into()));
     let result = run();

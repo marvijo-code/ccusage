@@ -26,7 +26,7 @@ struct ConfigCommand {
     report: String,
 }
 
-pub(crate) struct ConfigContext {
+pub struct ConfigContext {
     value: Option<Value>,
     command: ConfigCommand,
     pi_stores: Vec<NamedPiStore>,
@@ -34,7 +34,7 @@ pub(crate) struct ConfigContext {
 }
 
 impl ConfigContext {
-    pub(crate) fn from_args(args: &[String]) -> Self {
+    pub fn from_args(args: &[String]) -> Self {
         let command = detect_config_command(args);
         let value = load_config_value(scan_config_path(args).as_deref());
         let (pi_stores, error) = value
@@ -179,7 +179,7 @@ fn validate_named_pi_store_name(name: &str) -> std::result::Result<(), NamedPiSt
 
 fn reserved_named_pi_store_names() -> Vec<&'static str> {
     std::iter::once("all")
-        .chain(crate::adapter::all::BUILT_IN_AGENT_NAMES.iter().copied())
+        .chain(crate::BUILT_IN_AGENT_NAMES.iter().copied())
         .collect()
 }
 
@@ -353,7 +353,7 @@ fn option_takes_value(arg: &str) -> bool {
 }
 
 fn is_agent_command(command: &str) -> bool {
-    crate::adapter::all::BUILT_IN_AGENT_NAMES.contains(&command)
+    crate::BUILT_IN_AGENT_NAMES.contains(&command)
 }
 
 fn is_report_command(command: &str) -> bool {
@@ -363,7 +363,7 @@ fn is_report_command(command: &str) -> bool {
     )
 }
 
-pub(crate) fn apply_config_to_shared(shared: &mut SharedArgs, config: &ConfigContext) {
+pub fn apply_config_to_shared(shared: &mut SharedArgs, config: &ConfigContext) {
     for options in config.option_maps() {
         apply_shared_options(shared, SharedOptions::from_map(options));
     }
@@ -372,7 +372,7 @@ pub(crate) fn apply_config_to_shared(shared: &mut SharedArgs, config: &ConfigCon
     }
 }
 
-pub(crate) fn apply_config_to_daily_args(args: &mut DailyArgs, config: &ConfigContext) {
+pub fn apply_config_to_daily_args(args: &mut DailyArgs, config: &ConfigContext) {
     for options in config.option_maps() {
         let options = DailySpecificOptions::from_map(options);
         if let Some(instances) = options.instances {
@@ -387,7 +387,7 @@ pub(crate) fn apply_config_to_daily_args(args: &mut DailyArgs, config: &ConfigCo
     }
 }
 
-pub(crate) fn apply_config_to_weekly_args(args: &mut WeeklyArgs, config: &ConfigContext) {
+pub fn apply_config_to_weekly_args(args: &mut WeeklyArgs, config: &ConfigContext) {
     for options in config.option_maps() {
         if let Some(day) = WeeklySpecificOptions::from_map(options).start_of_week {
             args.start_of_week = day.into();
@@ -395,7 +395,7 @@ pub(crate) fn apply_config_to_weekly_args(args: &mut WeeklyArgs, config: &Config
     }
 }
 
-pub(crate) fn apply_config_to_blocks_args(args: &mut BlocksArgs, config: &ConfigContext) {
+pub fn apply_config_to_blocks_args(args: &mut BlocksArgs, config: &ConfigContext) {
     for options in config.option_maps() {
         let options = BlocksSpecificOptions::from_map(options);
         if let Some(active) = options.active {
@@ -413,7 +413,7 @@ pub(crate) fn apply_config_to_blocks_args(args: &mut BlocksArgs, config: &Config
     }
 }
 
-pub(crate) fn apply_config_to_statusline_args(args: &mut StatuslineArgs, config: &ConfigContext) {
+pub fn apply_config_to_statusline_args(args: &mut StatuslineArgs, config: &ConfigContext) {
     for options in config.option_maps() {
         let options = StatuslineSpecificOptions::from_map(options);
         if let Some(offline) = options.offline {
@@ -461,7 +461,7 @@ pub(crate) fn apply_config_to_statusline_args(args: &mut StatuslineArgs, config:
     }
 }
 
-pub(crate) fn apply_config_to_agent_args(
+pub fn apply_config_to_agent_args(
     codex_speed: &mut CodexSpeed,
     mut pi_path: Option<&mut Option<String>>,
     mut open_claw_path: Option<&mut Option<String>>,
@@ -1180,7 +1180,7 @@ mod tests {
             .into_iter()
             .collect::<BTreeSet<_>>();
         let expected = std::iter::once("all")
-            .chain(crate::adapter::all::BUILT_IN_AGENT_NAMES.iter().copied())
+            .chain(crate::BUILT_IN_AGENT_NAMES.iter().copied())
             .collect::<BTreeSet<_>>();
 
         assert_eq!(reserved, expected);

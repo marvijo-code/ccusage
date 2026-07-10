@@ -108,6 +108,7 @@ name = "ccusage"
 version = "0.0.0"
 dependencies = [
  "ccusage-cli",
+ "ccusage-core",
  "ccusage-terminal",
  "ccusage-test-support",
  "compact_str",
@@ -115,7 +116,6 @@ dependencies = [
  "jiff",
  "memchr",
  "mimalloc",
- "minreq",
  "rustc-hash",
  "schemars",
  "serde",
@@ -131,6 +131,25 @@ version = "0.0.0"
 dependencies = [
  "insta",
  "serde_json",
+]
+
+[[package]]
+name = "ccusage-core"
+version = "0.0.0"
+dependencies = [
+ "ccusage-cli",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "insta",
+ "jiff",
+ "memchr",
+ "minreq",
+ "rustc-hash",
+ "schemars",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "ureq",
 ]
 
 [[package]]

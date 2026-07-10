@@ -42,8 +42,6 @@ pub(crate) fn run(args: AgentCommandArgs) -> Result<()> {
     report::print_table(&result.rows, kind, &shared, &result.detected_agents)
 }
 
-pub(crate) use loader::BUILT_IN_AGENT_NAMES;
-
 fn requested_sections(
     command_kind: AgentReportKind,
     sections: Vec<AgentReportKind>,

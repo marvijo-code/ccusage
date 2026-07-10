@@ -1,8 +1,57 @@
-use std::{borrow::Cow, marker::PhantomData};
+use std::{borrow::Cow, collections::BTreeMap, marker::PhantomData};
 
 use serde::Deserialize;
 
-use crate::CodexRawUsage;
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct CodexRawUsage {
+    pub(crate) input_tokens: u64,
+    pub(crate) cached_input_tokens: u64,
+    pub(crate) output_tokens: u64,
+    pub(crate) reasoning_output_tokens: u64,
+    pub(crate) total_tokens: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CodexTokenUsageEvent {
+    pub(crate) session_id: String,
+    pub(crate) timestamp: String,
+    pub(crate) model: Option<String>,
+    pub(crate) input_tokens: u64,
+    pub(crate) cached_input_tokens: u64,
+    pub(crate) output_tokens: u64,
+    pub(crate) reasoning_output_tokens: u64,
+    pub(crate) total_tokens: u64,
+    pub(crate) is_fallback_model: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct CodexModelUsage {
+    pub(crate) input_tokens: u64,
+    pub(crate) cached_input_tokens: u64,
+    pub(crate) output_tokens: u64,
+    pub(crate) reasoning_output_tokens: u64,
+    pub(crate) total_tokens: u64,
+    // Portion of the sums above that came from long-context requests (input
+    // above the OpenAI 272K threshold). OpenAI decides the pricing tier per
+    // request and bills the whole request at long-context rates, so the split
+    // has to be tracked while events are aggregated; it cannot be derived
+    // from the summed totals afterwards.
+    pub(crate) long_context_input_tokens: u64,
+    pub(crate) long_context_cached_input_tokens: u64,
+    pub(crate) long_context_output_tokens: u64,
+    pub(crate) is_fallback: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct CodexGroup {
+    pub(crate) input_tokens: u64,
+    pub(crate) cached_input_tokens: u64,
+    pub(crate) output_tokens: u64,
+    pub(crate) reasoning_output_tokens: u64,
+    pub(crate) total_tokens: u64,
+    pub(crate) models: BTreeMap<String, CodexModelUsage>,
+    pub(crate) last_activity: Option<String>,
+}
 
 #[derive(Deserialize)]
 pub(super) struct CodexSessionLogEntry<'a> {

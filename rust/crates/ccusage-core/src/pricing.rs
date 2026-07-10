@@ -26,34 +26,34 @@ const MODELS_DEV_FAILURE_RETRY_AFTER: Duration = Duration::from_secs(60);
 const MODEL_DATE_SUFFIX_DIGITS: usize = 8;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Pricing {
-    pub(crate) input: f64,
-    pub(crate) output: f64,
-    pub(crate) cache_create: f64,
-    pub(crate) cache_read: f64,
-    pub(crate) cache_read_explicit: bool,
-    pub(crate) input_above_200k: Option<f64>,
-    pub(crate) output_above_200k: Option<f64>,
-    pub(crate) cache_create_above_200k: Option<f64>,
-    pub(crate) cache_read_above_200k: Option<f64>,
+pub struct Pricing {
+    pub input: f64,
+    pub output: f64,
+    pub cache_create: f64,
+    pub cache_read: f64,
+    pub cache_read_explicit: bool,
+    pub input_above_200k: Option<f64>,
+    pub output_above_200k: Option<f64>,
+    pub cache_create_above_200k: Option<f64>,
+    pub cache_read_above_200k: Option<f64>,
     // Token count above which the `*_above_200k` rates apply. The field names
     // keep the LiteLLM `_above_200k_tokens` suffix for JSON compatibility, but
     // some providers switch tiers at a different point (OpenAI long-context
     // pricing starts above 272K input tokens), so the threshold is per model.
-    pub(crate) long_context_threshold: Option<u64>,
-    pub(crate) fast_multiplier: f64,
+    pub long_context_threshold: Option<u64>,
+    pub fast_multiplier: f64,
 }
 
 /// Default tier boundary for LiteLLM `*_above_200k_tokens` pricing fields.
-pub(crate) const DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS: u64 = 200_000;
+pub const DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS: u64 = 200_000;
 
 /// OpenAI long-context pricing boundary: requests with more than 272K input
 /// tokens (GPT-5's maximum short-context input size) are billed at
 /// long-context rates.
-pub(crate) const OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS: u64 = 272_000;
+pub const OPENAI_LONG_CONTEXT_THRESHOLD_TOKENS: u64 = 272_000;
 
 impl Pricing {
-    pub(crate) const fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             input: 0.0,
             output: 0.0,
@@ -71,7 +71,7 @@ impl Pricing {
 }
 
 #[derive(Debug)]
-pub(crate) struct PricingMap {
+pub struct PricingMap {
     entries: FxHashMap<String, Pricing>,
     context_limits: FxHashMap<String, u64>,
     enable_models_dev_fallback: bool,
@@ -225,7 +225,7 @@ impl FastMultiplierOverrides {
 }
 
 impl PricingMap {
-    pub(crate) fn load_embedded() -> Self {
+    pub fn load_embedded() -> Self {
         let mut map = Self::default();
         let fast_multiplier_overrides = FastMultiplierOverrides::load();
         map.load_json_with_overrides(BUILD_TIME_PRICING_JSON, &fast_multiplier_overrides);
@@ -238,7 +238,7 @@ impl PricingMap {
         map
     }
 
-    pub(crate) fn load_with_overrides<'a, I>(offline: bool, log: bool, overrides: I) -> Self
+    pub fn load_with_overrides<'a, I>(offline: bool, log: bool, overrides: I) -> Self
     where
         I: IntoIterator<Item = (&'a String, &'a PricingOverride)>,
     {
@@ -276,7 +276,7 @@ impl PricingMap {
         map
     }
 
-    pub(crate) fn load_json(&mut self, json: &str) -> usize {
+    pub fn load_json(&mut self, json: &str) -> usize {
         let fast_multiplier_overrides = FastMultiplierOverrides::load();
         self.load_json_with_overrides(json, &fast_multiplier_overrides)
     }
@@ -396,7 +396,7 @@ impl PricingMap {
         loaded_count
     }
 
-    pub(crate) fn find(&self, model: &str) -> Option<Pricing> {
+    pub fn find(&self, model: &str) -> Option<Pricing> {
         // Fast path: check the model-level cache first. When the same model
         // name is looked up repeatedly (e.g. across thousands of entries with
         // only a few dozen unique models), the cache avoids re-running the
@@ -448,7 +448,7 @@ impl PricingMap {
         result
     }
 
-    pub(crate) fn find_exact(&self, model: &str) -> Option<Pricing> {
+    pub fn find_exact(&self, model: &str) -> Option<Pricing> {
         self.entries.get(model).copied()
     }
 
@@ -472,7 +472,7 @@ impl PricingMap {
         })
     }
 
-    pub(crate) fn context_limit(&self, model: &str) -> Option<u64> {
+    pub fn context_limit(&self, model: &str) -> Option<u64> {
         let alias = crate::model_aliases::resolve_model_name(model);
         let resolved_alias = alias.as_ref();
         self.context_limit_entry_or_alias(model)
@@ -519,7 +519,7 @@ impl PricingMap {
         })
     }
 
-    pub(crate) fn apply_overrides<'a, I>(&mut self, overrides: I)
+    pub fn apply_overrides<'a, I>(&mut self, overrides: I)
     where
         I: IntoIterator<Item = (&'a String, &'a PricingOverride)>,
     {
@@ -626,7 +626,7 @@ impl PricingMap {
     }
 
     #[cfg(test)]
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.entries.len()
     }
 
@@ -1352,7 +1352,7 @@ fn builtin_long_context_rates(base_model: &str) -> Option<LongContextRates> {
 /// same value `apply_builtin_long_context_rates` stamps onto
 /// `Pricing::long_context_threshold`, and falls back to the default 200K
 /// boundary used for LiteLLM `*_above_200k_tokens` data.
-pub(crate) fn long_context_split_threshold(model: &str) -> u64 {
+pub fn long_context_split_threshold(model: &str) -> u64 {
     builtin_long_context_rates(model_without_date_suffix(model))
         .map(|rates| rates.threshold)
         .unwrap_or(DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS)

@@ -17,14 +17,12 @@ pub(crate) use report::{
     non_cached_input_tokens,
 };
 pub(crate) use speed::resolve_codex_speed;
+pub(crate) use types::{CodexGroup, CodexModelUsage, CodexRawUsage, CodexTokenUsageEvent};
 
 use report::{print_table_from_groups, report_from_groups};
 
 #[cfg(test)]
-use crate::{
-    CodexTokenUsageEvent,
-    cli::{AgentReportKind, CodexSpeed},
-};
+use crate::cli::{AgentReportKind, CodexSpeed};
 
 #[cfg(test)]
 use serde_json::Value;

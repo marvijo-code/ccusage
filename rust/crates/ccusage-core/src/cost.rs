@@ -6,11 +6,7 @@ use crate::{
 
 const CACHE_CREATE_1H_INPUT_MULTIPLIER: f64 = 2.0;
 
-pub(crate) fn calculate_cost(
-    data: &UsageEntry,
-    mode: CostMode,
-    pricing: Option<&PricingMap>,
-) -> f64 {
+pub fn calculate_cost(data: &UsageEntry, mode: CostMode, pricing: Option<&PricingMap>) -> f64 {
     calculate_cost_for_usage(
         data.message.model.as_deref(),
         data.message.usage,
@@ -20,7 +16,7 @@ pub(crate) fn calculate_cost(
     )
 }
 
-pub(crate) fn calculate_cost_for_usage(
+pub fn calculate_cost_for_usage(
     model: Option<&str>,
     usage: crate::TokenUsageRaw,
     cost_usd: Option<f64>,
@@ -36,7 +32,7 @@ pub(crate) fn calculate_cost_for_usage(
     }
 }
 
-pub(crate) fn missing_pricing_model_for_usage(
+pub fn missing_pricing_model_for_usage(
     model: Option<&str>,
     usage: crate::TokenUsageRaw,
     cost_usd: Option<f64>,
@@ -49,7 +45,7 @@ pub(crate) fn missing_pricing_model_for_usage(
     missing_pricing_model_for_token_total(model, crate::total_usage_tokens(usage), pricing)
 }
 
-pub(crate) fn missing_pricing_model_for_token_total(
+pub fn missing_pricing_model_for_token_total(
     model: Option<&str>,
     total_tokens: u64,
     pricing: Option<&PricingMap>,
@@ -65,7 +61,7 @@ pub(crate) fn missing_pricing_model_for_token_total(
         .then(|| crate::model_aliases::resolve_model_name(model).into_owned())
 }
 
-pub(crate) fn missing_pricing_model_for_candidates(
+pub fn missing_pricing_model_for_candidates(
     model: &str,
     candidates: impl IntoIterator<Item = String>,
     total_tokens: u64,
@@ -100,7 +96,7 @@ fn calculate_cost_from_tokens(
     calculate_cost_from_pricing(usage, pricing) * multiplier
 }
 
-pub(crate) fn calculate_cost_from_pricing(usage: crate::TokenUsageRaw, pricing: Pricing) -> f64 {
+pub fn calculate_cost_from_pricing(usage: crate::TokenUsageRaw, pricing: Pricing) -> f64 {
     let (cache_create_5m_tokens, cache_create_1h_tokens) =
         if let Some(breakdown) = usage.cache_creation {
             (
@@ -170,7 +166,7 @@ pub(crate) fn calculate_cost_from_pricing(usage: crate::TokenUsageRaw, pricing: 
     )
 }
 
-pub(crate) fn tiered_cost(tokens: u64, base: f64, above: Option<f64>, threshold: u64) -> f64 {
+pub fn tiered_cost(tokens: u64, base: f64, above: Option<f64>, threshold: u64) -> f64 {
     if tokens == 0 {
         return 0.0;
     }

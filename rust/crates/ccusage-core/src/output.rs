@@ -11,11 +11,11 @@ use crate::{
     short_model_name, terminal_width,
 };
 
-pub(crate) fn wants_json(shared: &SharedArgs) -> bool {
+pub fn wants_json(shared: &SharedArgs) -> bool {
     shared.json || shared.jq.is_some()
 }
 
-pub(crate) fn should_use_compact_layout(
+pub fn should_use_compact_layout(
     shared: &SharedArgs,
     is_stdout_tty: bool,
     terminal_width: usize,
@@ -24,7 +24,7 @@ pub(crate) fn should_use_compact_layout(
     shared.compact || (is_stdout_tty && terminal_width < compact_width_threshold)
 }
 
-pub(crate) fn summary_json(row: &UsageSummary) -> Value {
+pub fn summary_json(row: &UsageSummary) -> Value {
     let mut value = json!({
         "inputTokens": row.input_tokens,
         "outputTokens": row.output_tokens,
@@ -55,7 +55,7 @@ pub(crate) fn summary_json(row: &UsageSummary) -> Value {
     value
 }
 
-pub(crate) fn session_summary_json(row: &UsageSummary) -> Value {
+pub fn session_summary_json(row: &UsageSummary) -> Value {
     let mut value = json!({
         "sessionId": row.session_id,
         "inputTokens": row.input_tokens,
@@ -76,7 +76,7 @@ pub(crate) fn session_summary_json(row: &UsageSummary) -> Value {
     value
 }
 
-pub(crate) fn totals_json(rows: &[UsageSummary]) -> Value {
+pub fn totals_json(rows: &[UsageSummary]) -> Value {
     let input = rows.iter().map(|row| row.input_tokens).sum::<u64>();
     let output = rows.iter().map(|row| row.output_tokens).sum::<u64>();
     let cache_create = rows
@@ -100,7 +100,7 @@ pub(crate) fn totals_json(rows: &[UsageSummary]) -> Value {
     value
 }
 
-pub(crate) fn group_project_output(rows: &[UsageSummary]) -> Value {
+pub fn group_project_output(rows: &[UsageSummary]) -> Value {
     let mut projects: BTreeMap<String, Vec<Value>> = BTreeMap::new();
     for row in rows {
         projects
@@ -111,7 +111,7 @@ pub(crate) fn group_project_output(rows: &[UsageSummary]) -> Value {
     json!(projects)
 }
 
-pub(crate) fn print_json_or_jq(mut value: Value, jq: Option<&str>, no_cost: bool) -> Result<()> {
+pub fn print_json_or_jq(mut value: Value, jq: Option<&str>, no_cost: bool) -> Result<()> {
     if no_cost {
         strip_cost_json(&mut value);
     }
@@ -142,7 +142,7 @@ pub(crate) fn print_json_or_jq(mut value: Value, jq: Option<&str>, no_cost: bool
     Ok(())
 }
 
-pub(crate) fn print_usage_table(
+pub fn print_usage_table(
     title: &str,
     first_column: &str,
     rows: &[UsageSummary],
@@ -335,13 +335,13 @@ fn empty_usage_table_message() -> &'static str {
     "No usage data found."
 }
 
-pub(crate) fn print_missing_pricing_warnings(rows: &[UsageSummary], offline: bool) {
+pub fn print_missing_pricing_warnings(rows: &[UsageSummary], offline: bool) {
     for warning in missing_pricing_warnings(rows, offline) {
         eprintln!("{warning}");
     }
 }
 
-pub(crate) fn missing_pricing_warnings(rows: &[UsageSummary], offline: bool) -> Vec<String> {
+pub fn missing_pricing_warnings(rows: &[UsageSummary], offline: bool) -> Vec<String> {
     let models = rows
         .iter()
         .flat_map(|row| &row.model_breakdowns)
@@ -351,7 +351,7 @@ pub(crate) fn missing_pricing_warnings(rows: &[UsageSummary], offline: bool) -> 
     missing_pricing_warnings_for_models(models, offline)
 }
 
-pub(crate) fn print_missing_pricing_warnings_for_models<'a>(
+pub fn print_missing_pricing_warnings_for_models<'a>(
     models: impl IntoIterator<Item = &'a str>,
     offline: bool,
 ) {
@@ -360,7 +360,7 @@ pub(crate) fn print_missing_pricing_warnings_for_models<'a>(
     }
 }
 
-pub(crate) fn missing_pricing_warnings_for_models<'a>(
+pub fn missing_pricing_warnings_for_models<'a>(
     models: impl IntoIterator<Item = &'a str>,
     offline: bool,
 ) -> Vec<String> {
@@ -382,7 +382,7 @@ pub(crate) fn missing_pricing_warnings_for_models<'a>(
         .collect()
 }
 
-pub(crate) fn json_float(value: f64) -> Value {
+pub fn json_float(value: f64) -> Value {
     if value.is_finite()
         && value.fract() == 0.0
         && value >= i64::MIN as f64
@@ -460,7 +460,7 @@ fn push_breakdown_rows(
     }
 }
 
-pub(crate) fn format_models_multiline(models: &[String]) -> String {
+pub fn format_models_multiline(models: &[String]) -> String {
     let mut models = models
         .iter()
         .map(|model| short_model_name(model))
@@ -474,7 +474,7 @@ pub(crate) fn format_models_multiline(models: &[String]) -> String {
         .join("\n")
 }
 
-pub(crate) fn format_number(value: u64) -> String {
+pub fn format_number(value: u64) -> String {
     let s = value.to_string();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
     for (i, ch) in s.chars().rev().enumerate() {
@@ -486,11 +486,11 @@ pub(crate) fn format_number(value: u64) -> String {
     out.chars().rev().collect()
 }
 
-pub(crate) fn format_currency(value: f64) -> String {
+pub fn format_currency(value: f64) -> String {
     format!("${value:.2}")
 }
 
-pub(crate) fn strip_cost_json(value: &mut Value) {
+pub fn strip_cost_json(value: &mut Value) {
     match value {
         Value::Object(map) => {
             map.remove("totalCost");

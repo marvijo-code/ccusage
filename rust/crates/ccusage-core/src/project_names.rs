@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub(crate) fn parse_project_aliases(raw: Option<&str>) -> HashMap<String, String> {
+pub fn parse_project_aliases(raw: Option<&str>) -> HashMap<String, String> {
     raw.unwrap_or_default()
         .split(',')
         .filter_map(|pair| {
@@ -16,7 +16,7 @@ pub(crate) fn parse_project_aliases(raw: Option<&str>) -> HashMap<String, String
         .collect()
 }
 
-pub(crate) fn format_project_name(project: &str, aliases: &HashMap<String, String>) -> String {
+pub fn format_project_name(project: &str, aliases: &HashMap<String, String>) -> String {
     if let Some(alias) = aliases.get(project) {
         return alias.clone();
     }
@@ -122,7 +122,7 @@ fn is_windows_users_path(project: &str) -> bool {
         || project.starts_with("\\Users\\")
 }
 
-pub(crate) fn short_model_name(model: &str) -> String {
+pub fn short_model_name(model: &str) -> String {
     let model = model
         .strip_prefix("anthropic/claude-")
         .or_else(|| model.strip_prefix("claude-"))

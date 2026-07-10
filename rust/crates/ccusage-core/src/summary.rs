@@ -11,7 +11,7 @@ use crate::{
     format_naive_date, format_rfc3339_millis, parse_iso_date,
 };
 
-pub(crate) fn summarize_by_key<F, M>(
+pub fn summarize_by_key<F, M>(
     entries: &[LoadedEntry],
     key_fn: F,
     meta_fn: M,
@@ -114,7 +114,7 @@ impl UsageAccumulator {
 }
 
 #[derive(Default)]
-pub(crate) struct SessionAccumulator {
+pub struct SessionAccumulator {
     usage: UsageAccumulator,
     latest: Option<(TimestampMs, Arc<str>, Arc<str>)>,
     earliest: Option<TimestampMs>,
@@ -122,7 +122,7 @@ pub(crate) struct SessionAccumulator {
 }
 
 impl SessionAccumulator {
-    pub(crate) fn add_entry(&mut self, entry: &LoadedEntry) {
+    pub fn add_entry(&mut self, entry: &LoadedEntry) {
         self.usage.add_entry(entry);
         if self
             .latest
@@ -146,7 +146,7 @@ impl SessionAccumulator {
         }
     }
 
-    pub(crate) fn into_summary(self) -> Result<UsageSummary> {
+    pub fn into_summary(self) -> Result<UsageSummary> {
         let Some((timestamp, session_id, project_path)) = self.latest else {
             return Err(cli_error("empty session group"));
         };
@@ -161,12 +161,12 @@ impl SessionAccumulator {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum BucketKind {
+pub enum BucketKind {
     Monthly,
     Weekly,
 }
 
-pub(crate) fn summarize_summaries_by_bucket(
+pub fn summarize_summaries_by_bucket(
     rows: &[UsageSummary],
     kind: BucketKind,
     start: WeekDay,
@@ -267,11 +267,8 @@ fn aggregate_summaries(rows: &[&UsageSummary]) -> UsageSummary {
     summary
 }
 
-pub(crate) fn filter_and_sort_summaries<F>(
-    rows: &mut Vec<UsageSummary>,
-    shared: &SharedArgs,
-    date_fn: F,
-) where
+pub fn filter_and_sort_summaries<F>(rows: &mut Vec<UsageSummary>, shared: &SharedArgs, date_fn: F)
+where
     F: Fn(&UsageSummary) -> &str,
 {
     if shared.since.is_some() || shared.until.is_some() {
@@ -284,7 +281,7 @@ pub(crate) fn filter_and_sort_summaries<F>(
     sort_summaries(rows, &shared.order, date_fn);
 }
 
-pub(crate) fn sort_summaries<F>(rows: &mut [UsageSummary], order: &SortOrder, date_fn: F)
+pub fn sort_summaries<F>(rows: &mut [UsageSummary], order: &SortOrder, date_fn: F)
 where
     F: Fn(&UsageSummary) -> &str,
 {
@@ -294,7 +291,7 @@ where
     });
 }
 
-pub(crate) fn week_start(date: &str, start: WeekDay) -> Option<String> {
+pub fn week_start(date: &str, start: WeekDay) -> Option<String> {
     let date = parse_iso_date(date)?;
     let start_num = match start {
         WeekDay::Sunday => 0,

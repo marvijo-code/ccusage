@@ -8,7 +8,8 @@ use std::{
 use serde_json::{Value, json};
 
 use crate::{
-    CodexGroup, LoadedEntry, ModelBreakdown, PricingMap, Result, SessionAccumulator, UsageSummary,
+    BUILT_IN_AGENT_NAMES, CodexGroup, LoadedEntry, ModelBreakdown, PricingMap, Result,
+    SessionAccumulator, UsageSummary,
     adapter::{
         amp, claude, codebuff, codex, copilot, droid, gemini, goose, hermes, kilo, kimi, openclaw,
         opencode, pi, qwen,
@@ -24,11 +25,6 @@ use super::{
         LoadedAgentRows,
     },
 };
-
-pub(crate) const BUILT_IN_AGENT_NAMES: &[&str] = &[
-    "claude", "codex", "opencode", "amp", "droid", "codebuff", "hermes", "pi", "goose", "openclaw",
-    "kilo", "copilot", "gemini", "kimi", "qwen",
-];
 
 pub(super) fn load_rows(kind: AgentReportKind, shared: &SharedArgs) -> Result<AllLoadResult> {
     let pricing = load_pricing(shared);

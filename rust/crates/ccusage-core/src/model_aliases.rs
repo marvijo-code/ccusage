@@ -8,11 +8,10 @@ use std::{
 const MODEL_ALIASES_ENV: &str = "CCUSAGE_MODEL_ALIASES";
 
 static MODEL_ALIASES: OnceLock<RwLock<BTreeMap<String, String>>> = OnceLock::new();
-#[cfg(test)]
 static TEST_MODEL_ALIASES_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 /// Resolves a model name through `CCUSAGE_MODEL_ALIASES`, including `-fast` variants.
-pub(crate) fn resolve_model_name(model: &str) -> Cow<'_, str> {
+pub fn resolve_model_name(model: &str) -> Cow<'_, str> {
     let aliases = model_aliases();
     let aliases = aliases.read().unwrap_or_else(|error| error.into_inner());
     if let Some(alias) = aliases.get(model).filter(|alias| !alias.is_empty()) {
@@ -61,8 +60,8 @@ fn parse_model_aliases(raw: &str) -> BTreeMap<String, String> {
         .collect()
 }
 
-#[cfg(test)]
-pub(crate) fn set_model_aliases_for_tests<const N: usize>(
+#[doc(hidden)]
+pub fn set_model_aliases_for_tests<const N: usize>(
     aliases: [(&'static str, &'static str); N],
 ) -> ModelAliasesGuard {
     let guard = TEST_MODEL_ALIASES_LOCK
@@ -83,13 +82,12 @@ pub(crate) fn set_model_aliases_for_tests<const N: usize>(
     }
 }
 
-#[cfg(test)]
-pub(crate) struct ModelAliasesGuard {
+#[doc(hidden)]
+pub struct ModelAliasesGuard {
     previous: BTreeMap<String, String>,
     _guard: std::sync::MutexGuard<'static, ()>,
 }
 
-#[cfg(test)]
 impl Drop for ModelAliasesGuard {
     fn drop(&mut self) {
         let lock = model_aliases();

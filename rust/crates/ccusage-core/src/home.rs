@@ -1,6 +1,6 @@
 use std::{env, path::PathBuf};
 
-pub(crate) fn home_dir() -> Option<PathBuf> {
+pub fn home_dir() -> Option<PathBuf> {
     home_dir_from_env(
         env::var_os("HOME"),
         env::var_os("USERPROFILE"),
