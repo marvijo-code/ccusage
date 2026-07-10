@@ -3,6 +3,7 @@
   inputs,
   lib,
   mold,
+  pkgs,
   pkg-config,
   root ? ./.,
   stdenv,
@@ -70,7 +71,18 @@ let
         cleanCargoTomlFilter = cargoTomlFilter;
       };
     };
-  cargoArtifacts = craneLib.buildDepsOnly depsOnlyArgs;
+  dependencyArtifacts = craneLib.buildDepsOnly depsOnlyArgs;
+  workspaceArtifacts = import ./nix/cargo-artifacts.nix {
+    inherit
+      commonArgs
+      craneLib
+      lib
+      pkgs
+      root
+      ;
+    cargoArtifacts = dependencyArtifacts;
+  };
+  cargoArtifacts = workspaceArtifacts.all;
 in
 craneLib.buildPackage (
   commonArgs
@@ -97,8 +109,10 @@ craneLib.buildPackage (
       inherit
         cargoArtifacts
         commonArgs
+        dependencyArtifacts
         depsOnlyArgs
         version
+        workspaceArtifacts
         ;
     };
     meta = {

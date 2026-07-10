@@ -54,7 +54,17 @@ in
             cargoExtraArgs = "-p ccusage --bin ccusage --target ${target}";
             buildInputs = crossBuildInputs;
           };
-          crossCargoArtifacts = crossCraneLib.buildDepsOnly crossDepsOnlyArgs;
+          crossDependencyArtifacts = crossCraneLib.buildDepsOnly crossDepsOnlyArgs;
+          crossWorkspaceArtifacts = import ./cargo-artifacts.nix {
+            inherit root;
+            craneLib = crossCraneLib;
+            inherit (pkgs) lib;
+            inherit pkgs;
+            commonArgs = crossCommonArgs;
+            cargoArtifacts = crossDependencyArtifacts;
+            cargoTargetArgs = "--target ${target}";
+          };
+          crossCargoArtifacts = crossWorkspaceArtifacts.all;
         in
         crossCraneLib.buildPackage (
           crossCommonArgs
