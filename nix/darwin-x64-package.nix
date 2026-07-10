@@ -55,16 +55,9 @@ in
             buildInputs = crossBuildInputs;
           };
           crossDependencyArtifacts = crossCraneLib.buildDepsOnly crossDepsOnlyArgs;
-          crossWorkspaceArtifacts = import ./cargo-artifacts.nix {
-            inherit root;
-            craneLib = crossCraneLib;
-            inherit (pkgs) lib;
-            inherit pkgs;
-            commonArgs = crossCommonArgs;
-            cargoArtifacts = crossDependencyArtifacts;
-            cargoTargetArgs = "--target ${target}";
-          };
-          crossCargoArtifacts = crossWorkspaceArtifacts.all;
+          # Crane uses full (rather than incremental) artifact archives on
+          # Darwin, so sibling workspace layers cannot be merged safely.
+          crossCargoArtifacts = crossDependencyArtifacts;
         in
         crossCraneLib.buildPackage (
           crossCommonArgs
