@@ -32,7 +32,7 @@ test: rust::test test-node
 
 # Run Node's built-in test runner for TypeScript package and tooling tests
 test-node:
-    TZ=UTC node --test apps/ccusage/src/cli.test.ts nix/models-dev-compact.test.ts
+    TZ=UTC node --test apps/ccusage/src/cli.test.ts nix/models-dev-compact.test.ts nix/oxlint-plugin.test.js
 
 # Generate a large benchmark fixture for PR performance comparisons
 generate-large-fixture output_dir codex_output_dir size_mib="1024":
