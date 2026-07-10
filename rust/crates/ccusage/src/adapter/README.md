@@ -1,17 +1,18 @@
 # Agent Adapters
 
-This directory contains runtime agent source implementations for the native
-`ccusage` CLI.
+This directory contains the thin aliases that wire the native `ccusage` binary
+to runtime implementations under `rust/crates/ccusage-adapter-*`.
 
 Each agent adapter owns source-specific log discovery, parsing, token mapping,
 model mapping, source metadata, and source-specific pricing behavior. Shared
 report rendering, date handling, progress, pricing fetcher lifecycle, file
-walking, dedupe, and aggregation should stay in common ccusage modules when the
-source data allows it.
+walking, dedupe, and aggregation should stay in `ccusage-core` or
+`ccusage-adapter-common` when the source data allows it.
 
-Use one subdirectory per agent. The usual shape is:
+Use one crate per agent. The usual shape is:
 
-- `mod.rs` - public adapter surface and command wiring.
+- `Cargo.toml` - narrow shared and source-specific dependencies.
+- `src/lib.rs` - public adapter surface and command wiring.
 - `paths.rs` - environment variables, default directories, and path discovery.
 - `parser.rs` - raw record parsing and token/model mapping.
 - `loader.rs` - file walking, SQLite reads, dedupe, and date filtering entry points.

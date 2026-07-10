@@ -19,8 +19,8 @@ the user explicitly scopes a behavior change. Before implementing or refactoring
 an agent, inspect the current Rust adapter and the agent source reference docs:
 
 ```sh
-fd . rust/crates/ccusage/src/adapter/<agent>
-sed -n '1,220p' rust/crates/ccusage/src/adapter/<agent>/README.md
+fd . rust/crates/ccusage-adapter-<agent>
+sed -n '1,220p' rust/crates/ccusage-adapter-<agent>/src/README.md
 ```
 
 When porting behavior from the historical TypeScript implementation, first find
@@ -35,11 +35,11 @@ Preserve report semantics, JSON fields, table columns, progress/spinner text, ag
 Do not keep growing `main.rs` or single large adapter files. Use these
 responsibility boundaries where practical:
 
-- `adapter/<agent>/mod.rs` - public adapter surface and command wiring.
-- `adapter/<agent>/paths.rs` - environment variables, defaults, and path discovery.
-- `adapter/<agent>/parser.rs` - raw record parsing and token/model mapping.
-- `adapter/<agent>/loader.rs` - file walking, SQLite reads, dedupe, and date filtering entry points.
-- `adapter/<agent>/report.rs` - JSON/table row shaping when agent-specific.
+- `ccusage-adapter-<agent>/src/lib.rs` - public adapter surface and command wiring.
+- `ccusage-adapter-<agent>/src/paths.rs` - environment variables, defaults, and path discovery.
+- `ccusage-adapter-<agent>/src/parser.rs` - raw record parsing and token/model mapping.
+- `ccusage-adapter-<agent>/src/loader.rs` - file walking, SQLite reads, dedupe, and date filtering entry points.
+- `ccusage-adapter-<agent>/src/report.rs` - JSON/table row shaping when agent-specific.
 - shared modules stay in `types.rs`, `summary.rs`, `output.rs`, `pricing.rs`, `progress.rs`, and `date_utils.rs`.
 
 Keep public `pub(crate)` surfaces narrow. Prefer moving tests with the code they exercise instead of leaving all Rust tests in `main.rs`.

@@ -1,11 +1,11 @@
 # AGENTS.md - Agent Source Architecture
 
-This directory contains runtime agent source implementations for the native
-`ccusage` CLI.
+This directory wires the native `ccusage` binary to the adapter crates under
+`rust/crates/ccusage-adapter-*`.
 
 Read `README.md` first for adapter architecture, module layout, and
 source-specific README conventions. This file adds agent workflow rules for
-changes under `rust/crates/ccusage/src/adapter/`.
+changes under `rust/crates/ccusage-adapter-*/`.
 
 When moving an existing loader into an adapter, update internal imports to the
 adapter path instead of adding compatibility re-export shims. Keep old root-level
@@ -16,7 +16,8 @@ dedicated packaging entries.
 
 For each migrated or new agent:
 
-- Put all source-specific runtime logic under `rust/crates/ccusage/src/adapter/<agent>/`.
+- Put all source-specific runtime logic under
+  `rust/crates/ccusage-adapter-<agent>/src/`.
 - Implement fast detection that short-circuits once a usable source file is found.
 - Use shared file walking, JSONL scanning where applicable, SQLite loading,
   logging, pricing fetcher lifecycle, date formatting, table rendering, and
