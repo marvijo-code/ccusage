@@ -39,6 +39,7 @@ pub use output::{
     print_usage_table, session_summary_json, should_use_compact_layout, summary_json, totals_json,
     wants_json,
 };
+pub use pricing::{Pricing, PricingMap};
 pub use project_names::{format_project_name, parse_project_aliases, short_model_name};
 pub use summary::{
     BucketKind, SessionAccumulator, filter_and_sort_summaries, sort_summaries, summarize_by_key,

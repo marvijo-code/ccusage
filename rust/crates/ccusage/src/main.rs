@@ -3,15 +3,14 @@ mod cli;
 mod commands;
 
 pub(crate) use adapter::claude::{load_daily_summaries, load_entries};
-pub(crate) use adapter::codex::{CodexGroup, CodexModelUsage, CodexRawUsage, CodexTokenUsageEvent};
-pub(crate) use adapter::read_files_parallel;
-pub(crate) use ccusage_adapter_common::{
-    chunk_file_indexes_by_size, collect_files_with_extension, collect_usage_files,
-    filter_loaded_entries_by_date,
-};
+#[cfg(test)]
+pub(crate) use adapter::codex::CodexTokenUsageEvent;
+#[cfg(test)]
+pub(crate) use ccusage_adapter_common::chunk_file_indexes_by_size;
 pub(crate) use ccusage_core::*;
 use cli::{AgentCommandArgs, AgentReportKind, Command};
-use pricing::{Pricing, PricingMap};
+#[cfg(test)]
+use pricing::PricingMap;
 
 #[cfg(all(target_os = "linux", target_env = "musl"))]
 #[global_allocator]
@@ -74,6 +73,38 @@ mod tests {
         assert_eq!(
             std::any::type_name::<ccusage_core::TokenUsageRaw>(),
             std::any::type_name::<TokenUsageRaw>()
+        );
+    }
+
+    #[test]
+    fn agent_commands_are_exposed_by_independent_crates() {
+        let runs: [fn(AgentCommandArgs) -> Result<()>; 14] = [
+            ccusage_adapter_amp::run,
+            ccusage_adapter_codebuff::run,
+            ccusage_adapter_codex::run,
+            ccusage_adapter_copilot::run,
+            ccusage_adapter_droid::run,
+            ccusage_adapter_gemini::run,
+            ccusage_adapter_goose::run,
+            ccusage_adapter_hermes::run,
+            ccusage_adapter_kilo::run,
+            ccusage_adapter_kimi::run,
+            ccusage_adapter_openclaw::run,
+            ccusage_adapter_opencode::run,
+            ccusage_adapter_pi::run,
+            ccusage_adapter_qwen::run,
+        ];
+
+        assert_eq!(runs.len(), 14);
+    }
+
+    #[test]
+    fn unified_command_is_exposed_by_independent_crate() {
+        let run: fn(AgentCommandArgs) -> Result<()> = ccusage_adapter_all::run;
+
+        assert_eq!(
+            std::mem::size_of_val(&run),
+            std::mem::size_of::<fn(AgentCommandArgs) -> Result<()>>()
         );
     }
 

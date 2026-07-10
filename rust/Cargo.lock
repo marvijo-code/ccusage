@@ -107,7 +107,23 @@ dependencies = [
 name = "ccusage"
 version = "0.0.0"
 dependencies = [
+ "ccusage-adapter-all",
+ "ccusage-adapter-amp",
+ "ccusage-adapter-claude",
+ "ccusage-adapter-codebuff",
+ "ccusage-adapter-codex",
  "ccusage-adapter-common",
+ "ccusage-adapter-copilot",
+ "ccusage-adapter-droid",
+ "ccusage-adapter-gemini",
+ "ccusage-adapter-goose",
+ "ccusage-adapter-hermes",
+ "ccusage-adapter-kilo",
+ "ccusage-adapter-kimi",
+ "ccusage-adapter-openclaw",
+ "ccusage-adapter-opencode",
+ "ccusage-adapter-pi",
+ "ccusage-adapter-qwen",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -127,6 +143,118 @@ dependencies = [
 ]
 
 [[package]]
+name = "ccusage-adapter-all"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-amp",
+ "ccusage-adapter-claude",
+ "ccusage-adapter-codebuff",
+ "ccusage-adapter-codex",
+ "ccusage-adapter-common",
+ "ccusage-adapter-copilot",
+ "ccusage-adapter-droid",
+ "ccusage-adapter-gemini",
+ "ccusage-adapter-goose",
+ "ccusage-adapter-hermes",
+ "ccusage-adapter-kilo",
+ "ccusage-adapter-kimi",
+ "ccusage-adapter-openclaw",
+ "ccusage-adapter-opencode",
+ "ccusage-adapter-pi",
+ "ccusage-adapter-qwen",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "insta",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "ccusage-adapter-amp"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-claude"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-codebuff"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-amp",
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-codex"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
 name = "ccusage-adapter-common"
 version = "0.0.0"
 dependencies = [
@@ -134,6 +262,237 @@ dependencies = [
  "ccusage-test-support",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "ccusage-adapter-copilot"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-droid"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-gemini"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-goose"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-amp",
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-hermes"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-kilo"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-kimi"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-openclaw"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-opencode"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-pi"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
+]
+
+[[package]]
+name = "ccusage-adapter-qwen"
+version = "0.0.0"
+dependencies = [
+ "ccusage-adapter-common",
+ "ccusage-adapter-opencode",
+ "ccusage-cli",
+ "ccusage-core",
+ "ccusage-terminal",
+ "ccusage-test-support",
+ "compact_str",
+ "insta",
+ "jiff",
+ "memchr",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "sqlite",
 ]
 
 [[package]]
