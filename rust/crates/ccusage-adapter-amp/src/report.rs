@@ -11,7 +11,7 @@ use crate::{
 pub fn report_from_rows(rows: &[crate::UsageSummary], kind: AgentReportKind) -> Value {
     let rows_json = rows
         .iter()
-        .map(|row| ccusage_adapter_opencode::agent_summary_json(row, kind, false))
+        .map(|row| ccusage_core::agent_summary_json(row, kind, false))
         .collect::<Vec<_>>();
     json!({
         rows_key(kind): rows_json,
@@ -105,7 +105,7 @@ pub fn print_table_for_agent(
         ),
         shared,
     );
-    let first_column = ccusage_adapter_opencode::first_column(kind);
+    let first_column = ccusage_core::first_column(kind);
     let mut table = if compact {
         let mut headers = vec![
             first_column,

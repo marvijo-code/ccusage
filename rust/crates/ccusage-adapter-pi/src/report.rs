@@ -10,13 +10,7 @@ use crate::{
 pub fn report_from_rows(rows: &[crate::UsageSummary], kind: AgentReportKind) -> Value {
     let rows_json = rows
         .iter()
-        .map(|row| {
-            ccusage_adapter_opencode::agent_summary_json(
-                row,
-                kind,
-                kind == AgentReportKind::Session,
-            )
-        })
+        .map(|row| ccusage_core::agent_summary_json(row, kind, kind == AgentReportKind::Session))
         .collect::<Vec<_>>();
     json!({
         rows_key(kind): rows_json,

@@ -10,9 +10,7 @@ pub mod parser;
 pub mod paths;
 pub mod report;
 
-pub use report::{
-    agent_summary_json, first_column, report_json, summarize_entries, summary_period,
-};
+pub use report::{report_json, summarize_entries};
 
 use crate::{
     Result, cli::AgentCommandArgs, print_json_or_jq, print_usage_table, sort_summaries, wants_json,

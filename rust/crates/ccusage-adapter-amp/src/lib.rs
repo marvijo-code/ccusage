@@ -30,7 +30,7 @@ pub fn run(args: AgentCommandArgs) -> Result<()> {
     filter_loaded_entries_by_date(&mut entries, &shared);
     let mut rows = summarize_entries(&entries, args.kind)?;
     sort_summaries(&mut rows, &shared.order, |row| {
-        ccusage_adapter_opencode::summary_period(row)
+        ccusage_core::summary_period(row)
     });
     if wants_json(&shared) {
         return print_json_or_jq(

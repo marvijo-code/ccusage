@@ -31,7 +31,7 @@ pub fn run(args: AgentCommandArgs) -> Result<()> {
         filter_session_summaries(&mut rows, &args.shared);
     }
     sort_summaries(&mut rows, &args.shared.order, |row| {
-        ccusage_adapter_opencode::summary_period(row)
+        ccusage_core::summary_period(row)
     });
     if wants_json(&args.shared) {
         return print_json_or_jq(
@@ -42,7 +42,7 @@ pub fn run(args: AgentCommandArgs) -> Result<()> {
     }
     print_usage_table(
         "Qwen Token Usage Report",
-        ccusage_adapter_opencode::first_column(args.kind),
+        ccusage_core::first_column(args.kind),
         &rows,
         &args.shared,
         false,

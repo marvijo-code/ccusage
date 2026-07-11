@@ -28,11 +28,7 @@ pub fn run(args: AgentCommandArgs) -> Result<()> {
     let mut entries = load_entries(&shared, &pricing)?;
     filter_loaded_entries_by_date(&mut entries, &shared);
     let mut rows = summarize_entries(&entries, args.kind)?;
-    sort_summaries(
-        &mut rows,
-        &shared.order,
-        ccusage_adapter_opencode::summary_period,
-    );
+    sort_summaries(&mut rows, &shared.order, ccusage_core::summary_period);
     if wants_json(&shared) {
         return print_json_or_jq(
             report_from_rows(&rows, args.kind),
@@ -42,7 +38,7 @@ pub fn run(args: AgentCommandArgs) -> Result<()> {
     }
     print_usage_table(
         "Hermes Token Usage Report",
-        ccusage_adapter_opencode::first_column(args.kind),
+        ccusage_core::first_column(args.kind),
         &rows,
         &shared,
         false,

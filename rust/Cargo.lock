@@ -126,20 +126,10 @@ dependencies = [
  "ccusage-adapter-qwen",
  "ccusage-cli",
  "ccusage-core",
- "ccusage-terminal",
  "ccusage-test-support",
- "compact_str",
- "insta",
- "jiff",
- "memchr",
  "mimalloc",
- "rustc-hash",
- "schemars",
  "serde",
  "serde_json",
- "smallvec",
- "sqlite",
- "ureq",
 ]
 
 [[package]]
@@ -176,7 +166,6 @@ name = "ccusage-adapter-amp"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -218,7 +207,6 @@ version = "0.0.0"
 dependencies = [
  "ccusage-adapter-amp",
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -269,7 +257,6 @@ name = "ccusage-adapter-copilot"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -290,7 +277,6 @@ name = "ccusage-adapter-droid"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -311,7 +297,6 @@ name = "ccusage-adapter-gemini"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -333,7 +318,6 @@ version = "0.0.0"
 dependencies = [
  "ccusage-adapter-amp",
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -354,7 +338,6 @@ name = "ccusage-adapter-hermes"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -375,7 +358,6 @@ name = "ccusage-adapter-kilo"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -396,7 +378,6 @@ name = "ccusage-adapter-kimi"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -417,7 +398,6 @@ name = "ccusage-adapter-openclaw"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -458,7 +438,6 @@ name = "ccusage-adapter-pi"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
@@ -479,7 +458,6 @@ name = "ccusage-adapter-qwen"
 version = "0.0.0"
 dependencies = [
  "ccusage-adapter-common",
- "ccusage-adapter-opencode",
  "ccusage-cli",
  "ccusage-core",
  "ccusage-terminal",
