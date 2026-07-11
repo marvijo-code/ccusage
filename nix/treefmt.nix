@@ -165,7 +165,7 @@ in
             command = lib.getExe schemaGen;
             includes = [
               "apps/ccusage/config-schema.json"
-              "rust/crates/ccusage/src/config_schema.rs"
+              "rust/crates/ccusage-core/src/config_schema.rs"
               "rust/crates/ccusage/src/bin/generate_config_schema.rs"
             ];
             priority = 10;
