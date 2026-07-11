@@ -5,8 +5,8 @@ use ccusage_adapter_common::{
 };
 use ccusage_core::*;
 
-pub mod daily;
-pub mod paths;
+mod daily;
+mod paths;
 
 use std::{
     fs,
@@ -615,7 +615,7 @@ fn usage_limit_reset_time_from_line_bytes(
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use std::{path::Path, sync::Arc};
 
     use super::{

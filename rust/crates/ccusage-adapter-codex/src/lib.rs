@@ -5,13 +5,13 @@ use ccusage_adapter_common::{
 };
 use ccusage_core::*;
 
-pub mod aggregate;
-pub mod loader;
-pub mod parser;
-pub mod paths;
-pub mod report;
-pub mod speed;
-pub mod types;
+mod aggregate;
+mod loader;
+mod parser;
+mod paths;
+mod report;
+mod speed;
+mod types;
 
 use crate::{PricingMap, Result, cli::AgentCommandArgs, log_level, print_json_or_jq, wants_json};
 
@@ -61,7 +61,7 @@ pub fn report_json(
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use std::collections::BTreeMap;
 
     use super::aggregate::load_groups_from_directory;

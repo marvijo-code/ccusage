@@ -5,10 +5,10 @@ use ccusage_adapter_common::{
 };
 use ccusage_core::*;
 
-pub mod loader;
-pub mod parser;
-pub mod paths;
-pub mod report;
+mod loader;
+mod parser;
+mod paths;
+mod report;
 
 use crate::{
     Result,
@@ -72,7 +72,7 @@ pub fn has_data() -> bool {
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use ccusage_test_support::{EnvVarGuard, fs_fixture};
     use serde_json::json;
 

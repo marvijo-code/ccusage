@@ -5,10 +5,10 @@ use ccusage_adapter_common::{
 };
 use ccusage_core::*;
 
-pub mod loader;
-pub mod parser;
-pub mod paths;
-pub mod report;
+mod loader;
+mod parser;
+mod paths;
+mod report;
 
 use crate::cli::AgentCommandArgs;
 use crate::{PricingMap, Result, print_json_or_jq, print_usage_table, sort_summaries, wants_json};

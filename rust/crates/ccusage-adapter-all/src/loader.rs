@@ -135,7 +135,7 @@ fn load_base_rows(
                     "opencode",
                     load_kind,
                     &loader_shared,
-                    || opencode::loader::load_entries(&loader_shared),
+                    || opencode::load_entries(&loader_shared),
                     opencode::summarize_entries,
                 )
             }),

@@ -5,11 +5,12 @@ use ccusage_adapter_common::{
 };
 use ccusage_core::*;
 
-pub mod loader;
-pub mod parser;
-pub mod paths;
-pub mod report;
+mod loader;
+mod parser;
+mod paths;
+mod report;
 
+pub use loader::load_entries;
 pub use report::{report_json, summarize_entries};
 
 use crate::{
