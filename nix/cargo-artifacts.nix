@@ -109,12 +109,9 @@ let
   };
   amp = mkArtifacts {
     name = "ccusage-adapter-amp";
-    cargoArtifacts = opencode;
+    cargoArtifacts = foundation;
     packages = [ "ccusage-adapter-amp" ];
-    sources = foundationCrates ++ [
-      "ccusage-adapter-opencode"
-      "ccusage-adapter-amp"
-    ];
+    sources = foundationCrates ++ [ "ccusage-adapter-amp" ];
   };
   mkFoundationAdapter =
     name:
@@ -124,17 +121,6 @@ let
       packages = [ (adapterCrate name) ];
       sources = foundationCrates ++ [ (adapterCrate name) ];
     };
-  mkOpencodeAdapter =
-    name:
-    mkArtifacts {
-      name = "ccusage-adapter-${name}";
-      cargoArtifacts = opencode;
-      packages = [ (adapterCrate name) ];
-      sources = foundationCrates ++ [
-        "ccusage-adapter-opencode"
-        (adapterCrate name)
-      ];
-    };
   mkAmpAdapter =
     name:
     mkArtifacts {
@@ -142,7 +128,6 @@ let
       cargoArtifacts = amp;
       packages = [ (adapterCrate name) ];
       sources = foundationCrates ++ [
-        "ccusage-adapter-opencode"
         "ccusage-adapter-amp"
         (adapterCrate name)
       ];
@@ -153,15 +138,15 @@ let
     codex = mkFoundationAdapter "codex";
     codebuff = mkAmpAdapter "codebuff";
     goose = mkAmpAdapter "goose";
-    copilot = mkOpencodeAdapter "copilot";
-    droid = mkOpencodeAdapter "droid";
-    gemini = mkOpencodeAdapter "gemini";
-    hermes = mkOpencodeAdapter "hermes";
-    kilo = mkOpencodeAdapter "kilo";
-    kimi = mkOpencodeAdapter "kimi";
-    openclaw = mkOpencodeAdapter "openclaw";
-    pi = mkOpencodeAdapter "pi";
-    qwen = mkOpencodeAdapter "qwen";
+    copilot = mkFoundationAdapter "copilot";
+    droid = mkFoundationAdapter "droid";
+    gemini = mkFoundationAdapter "gemini";
+    hermes = mkFoundationAdapter "hermes";
+    kilo = mkFoundationAdapter "kilo";
+    kimi = mkFoundationAdapter "kimi";
+    openclaw = mkFoundationAdapter "openclaw";
+    pi = mkFoundationAdapter "pi";
+    qwen = mkFoundationAdapter "qwen";
   };
   merged =
     pkgs.runCommand "ccusage-adapter-artifacts-merged"
@@ -196,11 +181,36 @@ let
     packages = [ "ccusage-adapter-all" ];
     sources = foundationCrates ++ allAdapterCrates ++ [ "ccusage-adapter-all" ];
   };
+  cacheRoot = pkgs.linkFarm "ccusage-cargo-artifact-cache-root" (
+    [
+      {
+        name = "dependencies";
+        path = cargoArtifacts;
+      }
+      {
+        name = "foundation";
+        path = foundation;
+      }
+      {
+        name = "merged";
+        path = merged;
+      }
+      {
+        name = "all";
+        path = all;
+      }
+    ]
+    ++ lib.mapAttrsToList (name: path: {
+      name = "adapter-${name}";
+      inherit path;
+    }) adapterArtifacts
+  );
 in
 {
   inherit
     adapterArtifacts
     all
+    cacheRoot
     foundation
     merged
     ;

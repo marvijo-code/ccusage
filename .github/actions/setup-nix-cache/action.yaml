@@ -2,12 +2,9 @@ name: Setup Nix with action cache
 description: >
   Install Nix and restore/save the store with cache-nix-action, shared by Linux
   and macOS. cache-nix-action only caches non-substitutable paths (the crane
-  deps, not the cache.nixos.org toolchain), so the cache stays small (~900MB).
-  No gc-max-store-size: these runners are ephemeral (restore -> build -> save),
-  so the store never accumulates across runs the way a sticky disk did. Trimming
-  before save would only delete the unrooted crane deps and force a recompile, so
-  we let cache-nix-action save the whole non-substitutable set as-is and rely on
-  purge to roll off stale entries.
+  deps, not the cache.nixos.org toolchain). Linux jobs root the current Crane
+  artifacts after building; garbage collection then removes superseded
+  generations before saving so restored caches do not grow on every commit.
 inputs:
   cache-scope:
     description: >
@@ -15,6 +12,11 @@ inputs:
       key. github.job is identical across matrix legs, so the scope is what keeps
       each leg separate without leaning on runner.arch. Leave empty for
       single-leg jobs, which github.job alone already distinguishes.
+    default: ''
+  gc-max-store-size-linux:
+    description: >
+      Optional Linux store size limit applied before cache save. Callers must
+      root every artifact they want the garbage collector to retain.
     default: ''
 runs:
   using: composite
@@ -45,6 +47,7 @@ runs:
         # artifacts; only package modules participate in this key.
         primary-key: nix-${{ github.workflow }}-${{ github.job }}-${{ inputs.cache-scope }}-${{ hashFiles('flake.lock', 'flake.nix', 'default.nix', 'package.nix', 'nix/packages.nix', 'nix/static-package.nix', 'nix/darwin-x64-package.nix', 'rust-toolchain.toml', 'rust/Cargo.lock', 'rust/**/Cargo.toml') }}-${{ github.sha }}
         restore-prefixes-first-match: nix-${{ github.workflow }}-${{ github.job }}-${{ inputs.cache-scope }}-${{ hashFiles('flake.lock', 'flake.nix', 'default.nix', 'package.nix', 'nix/packages.nix', 'nix/static-package.nix', 'nix/darwin-x64-package.nix', 'rust-toolchain.toml', 'rust/Cargo.lock', 'rust/**/Cargo.toml') }}-
+        gc-max-store-size-linux: ${{ inputs.gc-max-store-size-linux }}
         purge: true
         purge-prefixes: nix-${{ github.workflow }}-${{ github.job }}-${{ inputs.cache-scope }}-
         purge-created: 172800
